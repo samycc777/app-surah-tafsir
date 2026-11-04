@@ -1,0 +1,12 @@
+# large artifacts (APK, extracted APK, bundled DB, generated dumps)
+apk/
+db/
+extracted/
+extracted-arm/
+work/
+pylibs/
+node_modules/
+*.log
+data/tafsir-json/
+dist/
+.DS_Store
