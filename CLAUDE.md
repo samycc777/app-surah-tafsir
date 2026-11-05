@@ -22,7 +22,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Rebuild mushaf data (network): `python3 tools/fetch_mushaf.py` (raw API cache in git-ignored `work/api`).
 - Verify: `python3 -m http.server 8788 --directory dist` + `python3 tools/shots.py`.
 - Deploy: `HOME=$PWD/.home npx wrangler@3 pages deploy dist --project-name surah-tafsir --branch main`.
-- APK: every push to main runs `.github/workflows/android.yml` (GitHub: samycc777/app-surah-tafsir, private) → release `app-vN` with `surah-tafsir.apk`.
+- APK: every push to main runs `.github/workflows/android.yml` (GitHub: samycc777/app-surah-tafsir, public: private repos get no Actions minutes) → release `app-vN` with `surah-tafsir.apk`.
   Install on the phone: `gh release download -R samycc777/app-surah-tafsir -p '*.apk' -D <dir>` then `adb install -r`. Signing key: `~/Backups/surah-signing-key/` (also in Actions secrets).
 
 ## Conventions
