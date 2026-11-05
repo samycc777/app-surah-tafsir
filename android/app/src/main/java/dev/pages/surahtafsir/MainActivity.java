@@ -101,6 +101,8 @@ public class MainActivity extends Activity {
         ctl.setAppearanceLightStatusBars(!dark);
         ctl.setAppearanceLightNavigationBars(!dark);
         if (web != null) web.setBackgroundColor(dark ? c : Color.parseColor("#faf7f0"));
+        // the strip left by the hidden status bar in fullscreen shows the window, so paint it too
+        getWindow().getDecorView().setBackgroundColor(dark ? c : Color.parseColor("#faf7f0"));
     }
 
     private class Bridge {
