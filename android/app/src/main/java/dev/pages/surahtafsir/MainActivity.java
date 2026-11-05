@@ -122,6 +122,8 @@ public class MainActivity extends Activity {
         public void immersive(boolean on) {
             runOnUiThread(() -> {
                 full = on;
+                // draw the page over the whole screen (under the hidden bars), not inside their old space
+                WindowCompat.setDecorFitsSystemWindows(getWindow(), !on);
                 WindowInsetsControllerCompat ctl = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
                 ctl.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
                 if (on) ctl.hide(WindowInsetsCompat.Type.systemBars());
