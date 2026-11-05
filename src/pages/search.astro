@@ -1,0 +1,15 @@
+---
+import App from '../layouts/App.astro';
+import Icon from '../components/Icon.astro';
+---
+<App title="البحث">
+  <h1 style="font-size:1.05rem;margin:2px 4px 12px;color:var(--brand)">البحث في التفسير</h1>
+  <form class="card searchbar" id="sform" role="search" autocomplete="off">
+    <input type="search" id="q" name="q" placeholder="كلمة أو عبارة…" aria-label="بحث" />
+    <button type="submit" aria-label="بحث"><Icon name="search" size={20} /></button>
+  </form>
+  <div class="note" id="status"></div>
+  <ul class="results" id="results"></ul>
+  <button type="button" class="more" id="more" hidden>المزيد</button>
+  <script is:inline src="/js/search.js" defer></script>
+</App>

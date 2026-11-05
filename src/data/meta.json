@@ -1,0 +1,1142 @@
+[
+{
+"n": 1,
+"name": "الفاتحة",
+"ayahs": 7,
+"place": "مكية",
+"seq": 5,
+"class": "المثاني",
+"pct": 6.4,
+"full": false
+},
+{
+"n": 2,
+"name": "البقرة",
+"ayahs": 286,
+"place": "مدنية",
+"seq": 87,
+"class": "الطوال",
+"pct": 8.9,
+"full": false
+},
+{
+"n": 3,
+"name": "آل عمران",
+"ayahs": 200,
+"place": "مدنية",
+"seq": 89,
+"class": "الطوال",
+"pct": 0.8,
+"full": false
+},
+{
+"n": 4,
+"name": "النساء",
+"ayahs": 176,
+"place": "مدنية",
+"seq": 92,
+"class": "الطوال",
+"pct": 13.5,
+"full": false
+},
+{
+"n": 5,
+"name": "المائدة",
+"ayahs": 120,
+"place": "مدنية",
+"seq": 112,
+"class": "الطوال",
+"pct": 15.1,
+"full": false
+},
+{
+"n": 6,
+"name": "الأنعام",
+"ayahs": 165,
+"place": "مكية",
+"seq": 55,
+"class": "الطوال",
+"pct": 15.1,
+"full": false
+},
+{
+"n": 7,
+"name": "الأعراف",
+"ayahs": 206,
+"place": "مكية",
+"seq": 39,
+"class": "الطوال",
+"pct": 18.8,
+"full": false
+},
+{
+"n": 8,
+"name": "الأنفال",
+"ayahs": 75,
+"place": "مدنية",
+"seq": 88,
+"class": "الطوال",
+"pct": 15.9,
+"full": false
+},
+{
+"n": 9,
+"name": "التوبة",
+"ayahs": 129,
+"place": "مدنية",
+"seq": 113,
+"class": "الطوال",
+"pct": 15.9,
+"full": false
+},
+{
+"n": 10,
+"name": "يونس",
+"ayahs": 109,
+"place": "مكية",
+"seq": 51,
+"class": "المئين",
+"pct": 19.5,
+"full": false
+},
+{
+"n": 11,
+"name": "هود",
+"ayahs": 123,
+"place": "مكية",
+"seq": 52,
+"class": "المئين",
+"pct": 21.0,
+"full": false
+},
+{
+"n": 12,
+"name": "يوسف",
+"ayahs": 111,
+"place": "مكية",
+"seq": 53,
+"class": "المئين",
+"pct": 17.1,
+"full": false
+},
+{
+"n": 13,
+"name": "الرعد",
+"ayahs": 43,
+"place": "مدنية",
+"seq": 96,
+"class": "المثاني",
+"pct": 14.3,
+"full": false
+},
+{
+"n": 14,
+"name": "إبراهيم",
+"ayahs": 52,
+"place": "مكية",
+"seq": 72,
+"class": "المثاني",
+"pct": 16.7,
+"full": false
+},
+{
+"n": 15,
+"name": "الحجر",
+"ayahs": 99,
+"place": "مكية",
+"seq": 54,
+"class": "المثاني",
+"pct": 17.4,
+"full": false
+},
+{
+"n": 16,
+"name": "النحل",
+"ayahs": 128,
+"place": "مكية",
+"seq": 70,
+"class": "المئين",
+"pct": 14.4,
+"full": false
+},
+{
+"n": 17,
+"name": "الإسراء",
+"ayahs": 111,
+"place": "مكية",
+"seq": 50,
+"class": "المئين",
+"pct": 15.8,
+"full": false
+},
+{
+"n": 18,
+"name": "الكهف",
+"ayahs": 110,
+"place": "مكية",
+"seq": 69,
+"class": "المئين",
+"pct": 12.5,
+"full": false
+},
+{
+"n": 19,
+"name": "مريم",
+"ayahs": 98,
+"place": "مكية",
+"seq": 44,
+"class": "المثاني",
+"pct": 13.5,
+"full": false
+},
+{
+"n": 20,
+"name": "طه",
+"ayahs": 135,
+"place": "مكية",
+"seq": 45,
+"class": "المئين",
+"pct": 14.8,
+"full": false
+},
+{
+"n": 21,
+"name": "الأنبياء",
+"ayahs": 112,
+"place": "مكية",
+"seq": 73,
+"class": "المئين",
+"pct": 14.0,
+"full": false
+},
+{
+"n": 22,
+"name": "الحج",
+"ayahs": 78,
+"place": "مدنية",
+"seq": 103,
+"class": "المثاني",
+"pct": 14.3,
+"full": false
+},
+{
+"n": 23,
+"name": "المؤمنون",
+"ayahs": 118,
+"place": "مكية",
+"seq": 74,
+"class": "المئين",
+"pct": 19.0,
+"full": false
+},
+{
+"n": 24,
+"name": "النور",
+"ayahs": 64,
+"place": "مدنية",
+"seq": 102,
+"class": "المثاني",
+"pct": 14.6,
+"full": false
+},
+{
+"n": 25,
+"name": "الفرقان",
+"ayahs": 77,
+"place": "مكية",
+"seq": 42,
+"class": "المثاني",
+"pct": 15.5,
+"full": false
+},
+{
+"n": 26,
+"name": "الشعراء",
+"ayahs": 227,
+"place": "مكية",
+"seq": 47,
+"class": "المئين",
+"pct": 21.0,
+"full": false
+},
+{
+"n": 27,
+"name": "النمل",
+"ayahs": 93,
+"place": "مكية",
+"seq": 48,
+"class": "المثاني",
+"pct": 18.2,
+"full": false
+},
+{
+"n": 28,
+"name": "القصص",
+"ayahs": 88,
+"place": "مكية",
+"seq": 49,
+"class": "المثاني",
+"pct": 17.0,
+"full": false
+},
+{
+"n": 29,
+"name": "العنكبوت",
+"ayahs": 69,
+"place": "مكية",
+"seq": 85,
+"class": "المثاني",
+"pct": 14.1,
+"full": false
+},
+{
+"n": 30,
+"name": "الروم",
+"ayahs": 60,
+"place": "مكية",
+"seq": 84,
+"class": "المثاني",
+"pct": 13.1,
+"full": false
+},
+{
+"n": 31,
+"name": "لقمان",
+"ayahs": 34,
+"place": "مكية",
+"seq": 57,
+"class": "المثاني",
+"pct": 12.9,
+"full": false
+},
+{
+"n": 32,
+"name": "السجدة",
+"ayahs": 30,
+"place": "مكية",
+"seq": 75,
+"class": "المثاني",
+"pct": 19.2,
+"full": false
+},
+{
+"n": 33,
+"name": "الأحزاب",
+"ayahs": 73,
+"place": "مدنية",
+"seq": 90,
+"class": "المثاني",
+"pct": 17.4,
+"full": false
+},
+{
+"n": 34,
+"name": "سبإ",
+"ayahs": 54,
+"place": "مكية",
+"seq": 58,
+"class": "المثاني",
+"pct": 13.8,
+"full": false
+},
+{
+"n": 35,
+"name": "فاطر",
+"ayahs": 45,
+"place": "مكية",
+"seq": 43,
+"class": "المثاني",
+"pct": 14.6,
+"full": false
+},
+{
+"n": 36,
+"name": "يس",
+"ayahs": 83,
+"place": "مكية",
+"seq": 41,
+"class": "المثاني",
+"pct": 15.2,
+"full": false
+},
+{
+"n": 37,
+"name": "الصافات",
+"ayahs": 182,
+"place": "مكية",
+"seq": 56,
+"class": "المئين",
+"pct": 18.1,
+"full": false
+},
+{
+"n": 38,
+"name": "ص",
+"ayahs": 88,
+"place": "مكية",
+"seq": 38,
+"class": "المثاني",
+"pct": 15.3,
+"full": false
+},
+{
+"n": 39,
+"name": "الزمر",
+"ayahs": 75,
+"place": "مكية",
+"seq": 59,
+"class": "المثاني",
+"pct": 18.1,
+"full": false
+},
+{
+"n": 40,
+"name": "غافر",
+"ayahs": 85,
+"place": "مكية",
+"seq": 60,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 41,
+"name": "فصلت",
+"ayahs": 54,
+"place": "مكية",
+"seq": 61,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 42,
+"name": "الشورى",
+"ayahs": 53,
+"place": "مكية",
+"seq": 62,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 43,
+"name": "الزخرف",
+"ayahs": 89,
+"place": "مكية",
+"seq": 63,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 44,
+"name": "الدخان",
+"ayahs": 59,
+"place": "مكية",
+"seq": 64,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 45,
+"name": "الجاثية",
+"ayahs": 37,
+"place": "مكية",
+"seq": 65,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 46,
+"name": "الأحقاف",
+"ayahs": 35,
+"place": "مكية",
+"seq": 66,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 47,
+"name": "محمد",
+"ayahs": 38,
+"place": "مدنية",
+"seq": 95,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 48,
+"name": "الفتح",
+"ayahs": 29,
+"place": "مدنية",
+"seq": 111,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 49,
+"name": "الحجرات",
+"ayahs": 18,
+"place": "مدنية",
+"seq": 106,
+"class": "المثاني",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 50,
+"name": "ق",
+"ayahs": 45,
+"place": "مكية",
+"seq": 34,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 51,
+"name": "الذاريات",
+"ayahs": 60,
+"place": "مكية",
+"seq": 67,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 52,
+"name": "الطور",
+"ayahs": 49,
+"place": "مكية",
+"seq": 76,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 53,
+"name": "النجم",
+"ayahs": 62,
+"place": "مكية",
+"seq": 23,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 54,
+"name": "القمر",
+"ayahs": 55,
+"place": "مكية",
+"seq": 37,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 55,
+"name": "الرحمن",
+"ayahs": 78,
+"place": "مدنية",
+"seq": 97,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 56,
+"name": "الواقعة",
+"ayahs": 96,
+"place": "مكية",
+"seq": 46,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 57,
+"name": "الحديد",
+"ayahs": 29,
+"place": "مدنية",
+"seq": 94,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 58,
+"name": "المجادلة",
+"ayahs": 22,
+"place": "مدنية",
+"seq": 105,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 59,
+"name": "الحشر",
+"ayahs": 24,
+"place": "مدنية",
+"seq": 101,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 60,
+"name": "الممتحنة",
+"ayahs": 13,
+"place": "مدنية",
+"seq": 91,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 61,
+"name": "الصف",
+"ayahs": 14,
+"place": "مدنية",
+"seq": 109,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 62,
+"name": "الجمعة",
+"ayahs": 11,
+"place": "مدنية",
+"seq": 110,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 63,
+"name": "المنافقون",
+"ayahs": 11,
+"place": "مدنية",
+"seq": 104,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 64,
+"name": "التغابن",
+"ayahs": 18,
+"place": "مدنية",
+"seq": 108,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 65,
+"name": "الطلاق",
+"ayahs": 12,
+"place": "مدنية",
+"seq": 99,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 66,
+"name": "التحريم",
+"ayahs": 12,
+"place": "مدنية",
+"seq": 107,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 67,
+"name": "الملك",
+"ayahs": 30,
+"place": "مكية",
+"seq": 77,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 68,
+"name": "القلم",
+"ayahs": 52,
+"place": "مكية",
+"seq": 2,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 69,
+"name": "الحاقة",
+"ayahs": 52,
+"place": "مكية",
+"seq": 78,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 70,
+"name": "المعارج",
+"ayahs": 44,
+"place": "مكية",
+"seq": 79,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 71,
+"name": "نوح",
+"ayahs": 28,
+"place": "مكية",
+"seq": 71,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 72,
+"name": "الجن",
+"ayahs": 28,
+"place": "مكية",
+"seq": 40,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 73,
+"name": "المزمل",
+"ayahs": 20,
+"place": "مكية",
+"seq": 3,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 74,
+"name": "المدثر",
+"ayahs": 56,
+"place": "مكية",
+"seq": 4,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 75,
+"name": "القيامة",
+"ayahs": 40,
+"place": "مكية",
+"seq": 31,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 76,
+"name": "الإنسان",
+"ayahs": 31,
+"place": "مدنية",
+"seq": 98,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 77,
+"name": "المرسلات",
+"ayahs": 50,
+"place": "مكية",
+"seq": 33,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 78,
+"name": "النبإ",
+"ayahs": 40,
+"place": "مكية",
+"seq": 80,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 79,
+"name": "النازعات",
+"ayahs": 46,
+"place": "مكية",
+"seq": 81,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 80,
+"name": "عبس",
+"ayahs": 42,
+"place": "مكية",
+"seq": 24,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 81,
+"name": "التكوير",
+"ayahs": 29,
+"place": "مكية",
+"seq": 7,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 82,
+"name": "الانفطار",
+"ayahs": 19,
+"place": "مكية",
+"seq": 82,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 83,
+"name": "المطففين",
+"ayahs": 36,
+"place": "مكية",
+"seq": 86,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 84,
+"name": "الانشقاق",
+"ayahs": 25,
+"place": "مكية",
+"seq": 83,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 85,
+"name": "البروج",
+"ayahs": 22,
+"place": "مكية",
+"seq": 27,
+"class": "طوال المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 86,
+"name": "الطارق",
+"ayahs": 17,
+"place": "مكية",
+"seq": 36,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 87,
+"name": "الأعلى",
+"ayahs": 19,
+"place": "مكية",
+"seq": 8,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 88,
+"name": "الغاشية",
+"ayahs": 26,
+"place": "مكية",
+"seq": 68,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 89,
+"name": "الفجر",
+"ayahs": 30,
+"place": "مكية",
+"seq": 10,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 90,
+"name": "البلد",
+"ayahs": 20,
+"place": "مكية",
+"seq": 35,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 91,
+"name": "الشمس",
+"ayahs": 15,
+"place": "مكية",
+"seq": 26,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 92,
+"name": "الليل",
+"ayahs": 21,
+"place": "مكية",
+"seq": 9,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 93,
+"name": "الضحى",
+"ayahs": 11,
+"place": "مكية",
+"seq": 11,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 94,
+"name": "الشرح",
+"ayahs": 8,
+"place": "مكية",
+"seq": 12,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 95,
+"name": "التين",
+"ayahs": 8,
+"place": "مكية",
+"seq": 28,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 96,
+"name": "العلق",
+"ayahs": 19,
+"place": "مكية",
+"seq": 1,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 97,
+"name": "القدر",
+"ayahs": 5,
+"place": "مكية",
+"seq": 25,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 98,
+"name": "البينة",
+"ayahs": 8,
+"place": "مدنية",
+"seq": 100,
+"class": "أوساط المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 99,
+"name": "الزلزلة",
+"ayahs": 8,
+"place": "مدنية",
+"seq": 93,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 100,
+"name": "العاديات",
+"ayahs": 11,
+"place": "مكية",
+"seq": 14,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 101,
+"name": "القارعة",
+"ayahs": 11,
+"place": "مكية",
+"seq": 30,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 102,
+"name": "التكاثر",
+"ayahs": 8,
+"place": "مكية",
+"seq": 16,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 103,
+"name": "العصر",
+"ayahs": 3,
+"place": "مكية",
+"seq": 13,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 104,
+"name": "الهمزة",
+"ayahs": 9,
+"place": "مكية",
+"seq": 32,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 105,
+"name": "الفيل",
+"ayahs": 5,
+"place": "مكية",
+"seq": 19,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 106,
+"name": "قريش",
+"ayahs": 4,
+"place": "مكية",
+"seq": 29,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 107,
+"name": "الماعون",
+"ayahs": 7,
+"place": "مكية",
+"seq": 17,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 108,
+"name": "الكوثر",
+"ayahs": 3,
+"place": "مكية",
+"seq": 15,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 109,
+"name": "الكافرون",
+"ayahs": 6,
+"place": "مكية",
+"seq": 18,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 110,
+"name": "النصر",
+"ayahs": 3,
+"place": "مدنية",
+"seq": 114,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 111,
+"name": "المسد",
+"ayahs": 5,
+"place": "مكية",
+"seq": 6,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 112,
+"name": "الإخلاص",
+"ayahs": 4,
+"place": "مكية",
+"seq": 22,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 113,
+"name": "الفلق",
+"ayahs": 5,
+"place": "مكية",
+"seq": 20,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+},
+{
+"n": 114,
+"name": "الناس",
+"ayahs": 6,
+"place": "مكية",
+"seq": 21,
+"class": "قصار المفصل",
+"pct": 100.0,
+"full": true
+}
+]

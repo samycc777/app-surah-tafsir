@@ -1,0 +1,79 @@
+---
+import App from '../../layouts/App.astro';
+import { NAMES, ar, ayahWord, basmala, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
+
+export function getStaticPaths() {
+  return Array.from({ length: 114 }, (_, i) => ({ params: { n: String(i + 1) } }));
+}
+const n = Number(Astro.params.n);
+const m = meta(n);
+const ps = passages(n);
+const vs = verses[n];
+const shownBasmala = n !== 1 && n !== 9;
+const pass = vs.map((_, i) => passageFor(ps, i + 1));
+---
+<App title={`سورة ${m.name}`} back="/" nav={true}>
+  <div class="rhead" id="rhead" data-n={n} data-name={m.name} data-count={vs.length} data-full={m.full}>
+    <h1 style="margin:0 4px 0 0;font-size:1.15rem;color:var(--brand)">{m.name}</h1>
+    <span class="chip">{m.place}</span>
+    <span class="chip">{ar(m.ayahs)} {ayahWord(m.ayahs)}</span>
+    <span class="chip">الترتيب {ar(m.seq)}</span>
+    {!m.full && <span class="chip bad">حركات التفسير غير كاملة</span>}
+  </div>
+
+  <article class="card rcard">
+    {shownBasmala && <p class="bis">{basmala}</p>}
+    <div class="ayahs" id="ayahs">
+      {vs.map((t, i) => (
+        <span class="ay" data-v={i + 1} data-p={pass[i]} id={`v${i + 1}`}>{t} <span class="vn">{ar(i + 1)}</span></span>
+      ))}
+    </div>
+  </article>
+
+  {ps.map((p, i) => (
+    <template data-pass={i} data-a={p.a} data-b={p.b}>
+      {p.p.map((t) => (
+        <p>{pieces(t).map(([x, q]) => (q ? <span class="q">{x}</span> : x))}</p>
+      ))}
+    </template>
+  ))}
+
+  <nav class="pager">
+    {n > 1 && (
+      <a class="card pcard" href={`/surah/${n - 1}/`}>
+        <span class="arrow">›</span>
+        <span class="txt"><small>السورة السابقة</small><b>{NAMES[n - 2]}</b></span>
+      </a>
+    )}
+    {n < 114 && (
+      <a class="card pcard" href={`/surah/${n + 1}/`}>
+        <span class="txt"><small>السورة التالية</small><b>{NAMES[n]}</b></span>
+        <span class="arrow">‹</span>
+      </a>
+    )}
+  </nav>
+
+  <div class="sheet-wrap" id="taf" hidden>
+    <div class="backdrop" data-close></div>
+    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="taf-title">
+      <div class="grab"></div>
+      <header class="sheet-head">
+        <h2 id="taf-title">التفسير<span class="sub" id="taf-sub"></span></h2>
+        <button class="iconbtn" data-close aria-label="إغلاق" type="button">✕</button>
+      </header>
+      <div class="sheet-body">
+        <div class="ayahbox" id="taf-ayah"></div>
+        <p class="chip bad taf-note" id="taf-note" hidden>الحركات الكاملة غير متوفرة لهذه السورة بعد</p>
+        <div class="taf" id="taf-body"></div>
+      </div>
+      <footer class="sheet-foot">
+        <button class="fbtn" id="taf-prev" type="button" aria-label="الآية السابقة">›</button>
+        <button class="fbtn" id="taf-next" type="button" aria-label="الآية التالية">‹</button>
+        <span class="spacer"></span>
+        <button class="fbtn" id="taf-bookmark" type="button" aria-pressed="false" aria-label="حفظ"><span id="taf-bm-icon">☆</span></button>
+        <button class="fbtn" id="taf-copy" type="button">نسخ</button>
+        <button class="fbtn" id="taf-share" type="button">مشاركة</button>
+      </footer>
+    </section>
+  </div>
+</App>

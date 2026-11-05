@@ -1,0 +1,33 @@
+---
+import App from '../layouts/App.astro';
+import Icon from '../components/Icon.astro';
+import { META, ar, ayahWord } from '../lib.mjs';
+const full = META.filter((m) => m.full).length;
+---
+<App>
+  <form class="card searchbar" action="/search/" method="get" role="search">
+    <input type="search" name="q" placeholder="ابحث في التفسير…" aria-label="بحث في التفسير" />
+    <button type="submit" aria-label="بحث"><Icon name="search" size={20} /></button>
+  </form>
+
+  <a class="resume" id="resume" href="/" hidden>
+    <Icon name="book" size={22} />
+    <span class="txt"><b>تابع القراءة</b><small></small></span>
+    <Icon name="chevron" size={18} />
+  </a>
+
+  <p class="section-title">السور · {ar(114)}</p>
+  <div class="sgrid">
+    {META.map((m) => (
+      <a class="card scard" href={`/surah/${m.n}/`}>
+        <span class="sno">{ar(m.n)}</span>
+        <span class="txt">
+          <span class="sname">{m.name}</span>
+          <span class="smeta">{m.place} · {ar(m.ayahs)} {ayahWord(m.ayahs)}{m.full && <i class="dot" title="حركات كاملة"></i>}</span>
+        </span>
+      </a>
+    ))}
+  </div>
+
+  <p class="note">الحركات الكاملة في {ar(full)} سورة من {ar(114)}.</p>
+</App>
