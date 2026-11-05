@@ -265,7 +265,7 @@
 
     if (!store.get('hint')) {
       store.set('hint', '1');
-      setTimeout(() => toast('اضغط أي آية لعرض تفسيرها'), 900);
+      setTimeout(() => { if (sheet.hidden) toast('اضغط أي آية لعرض تفسيرها'); }, 1200);
     }
 
     // deep link: /surah/2/#255
