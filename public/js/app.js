@@ -375,11 +375,6 @@
       rz = setTimeout(fit, 150);
     });
 
-    if (!store.get('hint')) {
-      store.set('hint', '1');
-      setTimeout(() => { if (sheet.hidden) toast('اضغط أي كلمة من المصحف لعرض تفسيرها'); }, 1200);
-    }
-
     const h = parseInt(location.hash.slice(1), 10);
     const wantsTafsir = new URLSearchParams(location.search).get('t') === '1';
     if (h >= 1 && h <= count) load(map[h] || first, { hash: h, highlight: h, open: wantsTafsir ? h : 0 });

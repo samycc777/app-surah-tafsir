@@ -26,6 +26,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Harakat are never invented or removed from the data: surahs 40–114 are fully vocalised, 1–39 are
   not; `meta.json.full` drives the notice. Re-run `tools/make_meta.py` after any tafsir data change.
 - Arabic UI only; no editorial text beyond UI words and the About page.
+- The mushaf reader is dark in both schemes (like the app) via `body.mushaf-shell`; the rest of the site follows the system.
 - The mushaf layout and Uthmani words come from the Quran.com API; the app's line PNGs/fonts are never reused. The page font is Amiri Quran (OFL).
 - The API returns pause/sajdah marks as separate words: merge them into the adjacent word or they float at line edges; leading pauses belong to the previous page/line.
 - Every page is static; the service worker pre‑caches all of them. Its version derives from file
