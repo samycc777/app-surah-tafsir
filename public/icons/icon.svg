@@ -1,9 +1,9 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="سورة">
-  <rect width="512" height="512" rx="112" fill="#1f4d40"/>
-  <g fill="#c9a227">
-    <rect x="145" y="145" width="222" height="222" transform="rotate(45 256 256)"/>
-    <rect x="145" y="145" width="222" height="222"/>
+  <rect width="512" height="512" rx="112" fill="#faf3e3"/>
+  <g fill="#f3e6c8" stroke="#a8864f" stroke-width="10" stroke-linejoin="round">
+    <rect x="145" y="145" width="222" height="222" rx="10" transform="rotate(45 256 256)"/>
+    <rect x="145" y="145" width="222" height="222" rx="10"/>
   </g>
-  <circle cx="256" cy="256" r="77" fill="#1f4d40"/>
-  <circle cx="256" cy="256" r="28" fill="#c9a227"/>
+  <circle cx="256" cy="256" r="80" fill="#faf3e3" stroke="#a8864f" stroke-width="8"/>
+  <circle cx="256" cy="256" r="30" fill="#a8864f"/>
 </svg>

@@ -2,6 +2,8 @@
   const AR = '٠١٢٣٤٥٦٧٨٩';
   const ar = (n) => String(n).replace(/\d/g, (d) => AR[d]);
   const en = (s) => String(s).replace(/[٠-٩]/g, (d) => AR.indexOf(d));
+  const native = window.SurahNative || null; // set by the Android app
+  const ORIGIN = native ? 'https://surah-tafsir.pages.dev' : location.origin;
   const $ = (s, r = document) => r.querySelector(s);
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const store = {
@@ -84,7 +86,9 @@
     const m = $('#theme-color');
     if (m) m.content = t === 'dark' ? '#1d1a15' : '#ffffff';
     store.set('theme', t);
+    native?.theme(t);
   };
+  native?.theme(document.documentElement.dataset.theme || 'light');
   $('#theme-toggle')?.addEventListener('click', () => {
     setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
@@ -350,7 +354,7 @@
       const p = t ? [...t.content.querySelectorAll('p')].map((x) => x.textContent.trim()).join('\n\n') : '';
       return {
         label: t ? label(+t.dataset.a, +t.dataset.b) : '',
-        text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${location.origin}/surah/${n}/#${cur}`,
+        text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${ORIGIN}/surah/${n}/#${cur}`,
       };
     };
 
@@ -370,7 +374,7 @@
     $('#taf-share').addEventListener('click', async () => {
       const { text, label: l } = passageText();
       if (navigator.share) {
-        try { await navigator.share({ title: `تفسير السعدي · ${name} · ${l}`, text, url: `${location.origin}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
+        try { await navigator.share({ title: `تفسير السعدي · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
         return;
       }
       copyText(text);
@@ -388,12 +392,13 @@
       toast(on ? 'تم الحفظ في المحفوظات' : 'أُزيل من المحفوظات');
     });
     $('#r-share')?.addEventListener('click', async () => {
-      const url = `${location.origin}/surah/${n}/#${pageAyah()}`;
+      const url = `${ORIGIN}/surah/${n}/#${pageAyah()}`;
       if (navigator.share) { try { await navigator.share({ title: `سورة ${name}`, url }); } catch { /* cancelled */ } return; }
       copyText(url);
     });
     $('#r-help')?.addEventListener('click', () => toast('اضغط أي كلمة لعرض تفسيرها، واسحب الصفحة للتنقل'));
     $('#r-full')?.addEventListener('click', () => {
+      if (native) { native.fullscreen(); return; }
       if (document.fullscreenElement) document.exitFullscreen?.();
       else document.documentElement.requestFullscreen?.().catch(() => toast('ملء الشاشة غير متاح'));
     });
@@ -457,7 +462,7 @@
   }
 
   /* ── service worker ────────────────────────────────── */
-  if ('serviceWorker' in navigator) {
+  if ('serviceWorker' in navigator && !native) {
     addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js').catch(() => { /* offline only */ });
     });

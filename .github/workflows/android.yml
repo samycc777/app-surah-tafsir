@@ -1,0 +1,37 @@
+# Builds the site, bundles it into the Android app (android/), signs it and publishes the APK as a
+# GitHub release. Google's build tools are x86-only, so this runs here rather than on the ARM laptop.
+name: Android app
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+permissions:
+  contents: write
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: npm }
+      - run: npm ci && npm run build && npm run check
+      - run: mkdir -p android/app/src/main/assets && rm -rf android/app/src/main/assets/www && cp -r dist android/app/src/main/assets/www && rm -f android/app/src/main/assets/www/sw.js
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: '17' }
+      - uses: gradle/actions/setup-gradle@v4
+        with: { gradle-version: '8.7' }
+      - name: Build and sign
+        env:
+          KEYSTORE_B64: ${{ secrets.ANDROID_KEYSTORE_B64 }}
+          KEYSTORE_PASSWORD: ${{ secrets.ANDROID_KEYSTORE_PASSWORD }}
+          VERSION_CODE: ${{ github.run_number }}
+        run: |
+          echo "$KEYSTORE_B64" | base64 -d > "$RUNNER_TEMP/release.jks"
+          KEYSTORE_FILE="$RUNNER_TEMP/release.jks" gradle -p android assembleRelease --no-daemon
+          cp android/app/build/outputs/apk/release/app-release.apk surah-tafsir.apk
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "app-v${{ github.run_number }}" surah-tafsir.apk \
+            --title "تطبيق سورة 1.${{ github.run_number }}" --notes "Android app (APK)." --latest

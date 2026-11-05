@@ -14,3 +14,10 @@ shots/
 .home/
 .npm-cache/
 .DS_Store
+
+# Android build output and bundled site copy
+android/app/build/
+android/.gradle/
+android/build/
+android/app/src/main/assets/
+*.jks

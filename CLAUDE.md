@@ -14,6 +14,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
 - `tools/`: `make_meta.py` (meta + harakat audit), `export_tafsir.py` (APK DB → JSONL), `fetch_mushaf.py` (Quran.com API → page JSON, one-time), `shots.py` (smoke test).
+- `android/`: plain WebView app (`dev.pages.surahtafsir`) that shows the built `dist/` from `assets/www` via WebViewAssetLoader (works offline); `window.SurahNative` bridges theme bar colour and fullscreen.
 - `docs/notes/`: RE report, artifact inventory (raw APK/DB are git-ignored, in the main folder only), UI screenshots.
 
 ## Commands
@@ -21,6 +22,8 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Rebuild mushaf data (network): `python3 tools/fetch_mushaf.py` (raw API cache in git-ignored `work/api`).
 - Verify: `python3 -m http.server 8788 --directory dist` + `python3 tools/shots.py`.
 - Deploy: `HOME=$PWD/.home npx wrangler@3 pages deploy dist --project-name surah-tafsir --branch main`.
+- APK: every push to main runs `.github/workflows/android.yml` (GitHub: samycc777/app-surah-tafsir, private) → release `app-vN` with `surah-tafsir.apk`.
+  Install on the phone: `gh release download -R samycc777/app-surah-tafsir -p '*.apk' -D <dir>` then `adb install -r`. Signing key: `~/Backups/surah-signing-key/` (also in Actions secrets).
 
 ## Conventions
 - Harakat are never invented or removed from the data: surahs 40–114 are fully vocalised, 1–39 are
@@ -41,4 +44,6 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - CSS classes don't reach inside SVG `<use>` → colour the `#orn` symbol with inline `style="fill:var(…)"`.
 - Light-only pages get force-darkened by Chrome Android → keep the `color-scheme: light dark` meta and all colours in the `:root` / `[data-theme='dark']` vars; no literals outside them.
 - The Tanzil notice has an unbreakable `====` line and is English → `.notice` needs `overflow-wrap:anywhere` and `direction:ltr`; otherwise the RTL page scrolls sideways.
+- Capacitor's local server sends every extension-less path to the root `index.html` → the app uses its own WebViewAssetLoader handler that maps `/x/` to `x/index.html`.
+- Inside the app `location.origin` is `appassets.androidplatform.net` → share links use `ORIGIN` (the public site); no service worker there.
 - `public/mushaf/pages` is ~5 MB and pre-cached by the SW; don't fetch all pages in the page HTML — the reader loads one JSON.
