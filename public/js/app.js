@@ -167,6 +167,24 @@
 
     let page = first, pageData = null, cur = 0, req = 0;
 
+    /* three tafsirs: Saadi is in the page (templates), the other two are fetched per surah */
+    const KINDS = { saadi: 'تفسير السعدي', muyassar: 'التفسير الميسر', mukhtasar: 'المختصر في التفسير' };
+    let kind = KINDS[store.get('tafsir')] ? store.get('tafsir') : 'saadi';
+    const extra = {};
+    const loadExtra = (k) => {
+      extra[k] ||= fetch(`/tafsir/${k}/${n}.json`).then((r) => { if (!r.ok) throw new Error(k); return r.json(); })
+        .catch((e) => { delete extra[k]; throw e; });
+      return extra[k];
+    };
+    const extraFor = (list, v) => list.find((x) => x.a <= v && v <= x.b) || null;
+    // _words_ = the Mukhtasar's highlighted meaning; a "____" rule = Muyassar's footnote line
+    const extraHtml = (t) => t.split(/\s*_{5,}\s*/).map((part, i) =>
+      `<p${i ? ' class="fn"' : ''}>${esc(part).replace(/_([^_]+)_/g, '<span class="q">$1</span>')}</p>`).join('');
+    const extraPlain = (t) => t.replace(/\s*_{5,}\s*/g, '\n\n').replace(/_([^_]+)_/g, '$1');
+    const pickBtns = $$('.taf-pick [data-kind]');
+    const syncPick = () => pickBtns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.kind === kind)));
+    syncPick();
+
     const tplFor = (i) => document.querySelector(`template[data-pass="${i}"]`);
     const label = (a, b) => (a === b ? `الآية ${ar(a)}` : `الآيات ${ar(a)}–${ar(b)}`);
     const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -197,6 +215,8 @@
       }
       const textRows = rows.filter((r) => r.words && r.words.length).length;
       linesEl.classList.toggle('sparse', textRows <= 8);
+      // the opening pages (Fatiha, Baqara) end in empty rows: drop them so the text sits mid-page
+      if (textRows <= 8) while (rows.length && rows[rows.length - 1].blank) rows.pop();
       linesEl.innerHTML = rows.map((r) => {
         if (r.band) return `<div class="m-band"><span><b>سورة ${esc(r.band.name)}</b></span></div>`;
         if (r.bas) return `<div class="m-bas">${BASMALA}</div>`;
@@ -239,14 +259,19 @@
     }
 
     function fit() {
-      linesEl.style.fontSize = '';
-      let size = parseFloat(getComputedStyle(linesEl).fontSize);
-      for (let i = 0; i < 30; i++) {
-        const over = [...linesEl.querySelectorAll('.m-line')].some((l) => l.scrollWidth > l.clientWidth + 1);
-        if (!over || size < 11) break;
-        size -= 0.4;
-        linesEl.style.fontSize = `${size}px`;
+      const lines = [...linesEl.querySelectorAll('.m-line')];
+      const ok = (px) => {
+        linesEl.style.fontSize = `${px}px`;
+        return linesEl.scrollHeight <= linesEl.clientHeight + 1 && !lines.some((l) => l.scrollWidth > l.clientWidth + 1);
+      };
+      const w = linesEl.clientWidth;
+      let lo = 10, hi = (w / 17) * (linesEl.classList.contains('sparse') ? 1.3 : 1);
+      if (ok(hi)) return;
+      for (let i = 0; i < 9; i++) {
+        const mid = (lo + hi) / 2;
+        if (ok(mid)) lo = mid; else hi = mid;
       }
+      ok(lo);
     }
 
     function highlight(v) {
@@ -254,13 +279,24 @@
       $$(`[data-v="${n}:${v}"]`, linesEl).forEach((e) => e.classList.add('on'));
     }
 
-    function renderTaf(v) {
-      const t = tplFor(passes[v - 1]);
-      bodyEl.innerHTML = t ? t.innerHTML : '';
-      if (!harakat) strip(bodyEl);
+    let tafReq = 0;
+    async function renderTaf(v) {
+      const my = ++tafReq;
       ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
-      sub.textContent = t ? `${name} · ${label(+t.dataset.a, +t.dataset.b)}` : name;
-      note.hidden = full;
+      if (kind === 'saadi') {
+        const t = tplFor(passes[v - 1]);
+        bodyEl.innerHTML = t ? t.innerHTML : '';
+        sub.textContent = t ? `${name} · ${label(+t.dataset.a, +t.dataset.b)}` : name;
+        note.hidden = full;
+      } else {
+        note.hidden = true;
+        let x = null;
+        try { x = extraFor(await loadExtra(kind), v); } catch { /* offline, not cached yet */ }
+        if (my !== tafReq) return;
+        bodyEl.innerHTML = x ? extraHtml(x.t) : '<p>تعذّر تحميل التفسير</p>';
+        sub.textContent = x ? `${name} · ${label(x.a, x.b)}` : name;
+      }
+      if (!harakat) strip(bodyEl);
       highlight(v);
       $('#taf-prev').disabled = v <= 1;
       $('#taf-next').disabled = v >= count;
@@ -277,10 +313,6 @@
       document.body.style.overflow = 'hidden';
       history.replaceState(null, '', `${location.pathname}#${v}`);
       remember(v);
-      if (scroll) {
-        const el = $(`[data-v="${n}:${v}"]`, linesEl);
-        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
-      }
     }
 
     function closeSheet() {
@@ -312,14 +344,9 @@
       const a = surahAyahOnPage(d);
       if (opts.hash) history.replaceState(null, '', `${location.pathname}#${opts.hash}`);
       else if (!opts.keepHash && a) history.replaceState(null, '', `${location.pathname}#${a}`);
-      window.scrollTo({ top: 0, behavior: 'instant' });
       if (opts.open) { showSheet(opts.open, false); }
       else {
-        if (opts.highlight) {
-          highlight(opts.highlight);
-          const el = $(`[data-v="${n}:${opts.highlight}"]`, linesEl);
-          if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
-        }
+        if (opts.highlight) highlight(opts.highlight);
         remember(opts.highlight || a || d.s.a);
       }
     }
@@ -354,13 +381,18 @@
       toast(on ? 'تم الحفظ' : 'أُزيل من المحفوظات');
     });
 
-    const passageText = () => {
-      const t = tplFor(passes[cur - 1]);
-      const p = t ? [...t.content.querySelectorAll('p')].map((x) => x.textContent.trim()).join('\n\n') : '';
-      return {
-        label: t ? label(+t.dataset.a, +t.dataset.b) : '',
-        text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${ORIGIN}/surah/${n}/#${cur}`,
-      };
+    const passageText = async () => {
+      let p = '', l = '';
+      if (kind === 'saadi') {
+        const t = tplFor(passes[cur - 1]);
+        p = t ? [...t.content.querySelectorAll('p')].map((x) => x.textContent.trim()).join('\n\n') : '';
+        l = t ? label(+t.dataset.a, +t.dataset.b) : '';
+      } else {
+        const x = extraFor(await loadExtra(kind).catch(() => []), cur);
+        p = x ? extraPlain(x.t) : '';
+        l = x ? label(x.a, x.b) : '';
+      }
+      return { label: l, text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${KINDS[kind]}\n${ORIGIN}/surah/${n}/#${cur}` };
     };
 
     const copyText = async (text) => {
@@ -375,18 +407,25 @@
       }
     };
 
-    $('#taf-copy').addEventListener('click', () => copyText(passageText().text));
+    $('#taf-copy').addEventListener('click', async () => copyText((await passageText()).text));
     $('#taf-share').addEventListener('click', async () => {
-      const { text, label: l } = passageText();
+      const { text, label: l } = await passageText();
       if (native?.share) { native.share(text); return; }
       if (navigator.share) {
-        try { await navigator.share({ title: `تفسير السعدي · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
+        try { await navigator.share({ title: `${KINDS[kind]} · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
         return;
       }
       copyText(text);
     });
 
     window.addEventListener('harakat', () => { if (!sheet.hidden) renderTaf(cur); });
+    pickBtns.forEach((b) => b.addEventListener('click', () => {
+      if (b.dataset.kind === kind) return;
+      kind = b.dataset.kind;
+      store.set('tafsir', kind);
+      syncPick();
+      renderTaf(cur);
+    }));
 
     /* reader tools: page mark, share, help, fullscreen */
     const markBtn = $('#r-mark');
@@ -403,13 +442,27 @@
       if (navigator.share) { try { await navigator.share({ title: `سورة ${name}`, url }); } catch { /* cancelled */ } return; }
       copyText(url);
     });
-    $('#r-help')?.addEventListener('click', () => toast('اضغط أي كلمة لعرض تفسيرها، واسحب الصفحة للتنقل'));
+    $('#r-help')?.addEventListener('click', () => toast('اضغط أي كلمة لعرض تفسيرها، واضغط خارج الكلمات لإظهار القائمة، واسحب الصفحة للتنقل'));
     $('#r-full')?.addEventListener('click', () => {
       if (native) { native.fullscreen(); return; }
       if (document.fullscreenElement) document.exitFullscreen?.();
       else document.documentElement.requestFullscreen?.().catch(() => toast('ملء الشاشة غير متاح'));
     });
     window.addEventListener('pageshown', syncMark);
+
+    // tap the page outside the words: show / hide the bars
+    const bar = $('.bar');
+    const setBarH = () => document.documentElement.style.setProperty('--bar-h', `${bar?.offsetHeight || 60}px`);
+    setBarH();
+    document.fonts?.ready.then(() => fit());
+    $('.m-frame').addEventListener('click', (e) => {
+      if (e.target.closest('[data-v]')) return;
+      document.body.classList.toggle('chrome');
+    });
+    if (!store.get('hint-bars')) {
+      store.set('hint-bars', '1');
+      setTimeout(() => toast('اضغط خارج الكلمات لإظهار القائمة'), 600);
+    }
 
     prevBtn.addEventListener('click', () => load(page - 1));
     nextBtn.addEventListener('click', () => load(page + 1));
@@ -430,7 +483,7 @@
     let rz;
     addEventListener('resize', () => {
       clearTimeout(rz);
-      rz = setTimeout(fit, 150);
+      rz = setTimeout(() => { setBarH(); fit(); }, 150);
     });
 
     const h = parseInt(location.hash.slice(1), 10);

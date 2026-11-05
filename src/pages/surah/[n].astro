@@ -23,6 +23,7 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
     data-n={n} data-name={m.name} data-full={m.full}
     data-first={range.first} data-last={range.last}
     data-pages={JSON.stringify(pages)} data-map={JSON.stringify(map)} data-passes={JSON.stringify(pass)}>
+    <div class="r-head">
     <div class="r-tools">
       <button class="iconbtn" id="r-mark" type="button" aria-pressed="false" aria-label="علامة على هذه الصفحة"><Icon name="bookmark" /></button>
       <button class="iconbtn" id="r-share" type="button" aria-label="مشاركة"><Icon name="share" /></button>
@@ -34,6 +35,7 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
       <span class="r-info">{m.place} · {ar(m.ayahs)} {ayahWord(m.ayahs)}</span>
       {n < 114 ? <a href={`/surah/${n + 1}/`}>{NAMES[n]}<Icon name="chevron" size={16} class="flip" /></a> : <span></span>}
     </nav>
+    </div>
 
     <div class="m-frame">
       <div class="m-page" aria-live="polite">
@@ -74,6 +76,11 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
           <h2 id="taf-title">التفسير<span class="sub" id="taf-sub"></span></h2>
           <button class="iconbtn" data-close aria-label="إغلاق" type="button"><Icon name="close" /></button>
         </header>
+        <div class="taf-pick" role="radiogroup" aria-label="اختيار التفسير">
+          <button type="button" role="radio" data-kind="saadi">السعدي</button>
+          <button type="button" role="radio" data-kind="muyassar">الميسر</button>
+          <button type="button" role="radio" data-kind="mukhtasar">المختصر</button>
+        </div>
         <div class="sheet-body">
           <div class="ayahbox" id="taf-ayah"></div>
           <p class="chip bad taf-note" id="taf-note" hidden>الحركات الكاملة غير متوفرة لهذه السورة بعد</p>

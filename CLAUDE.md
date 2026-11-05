@@ -1,6 +1,6 @@
 # app-surah
 
-PWA Qur'an reader with Saʿdī tafsir (Arabic-only, RTL; light by default, dark via the ☾ button). Rebuilt from a reverse‑engineering
+PWA Qur'an reader with three tafsirs — Saʿdī, al-Muyassar, al-Mukhtaṣar — picked in the tafsir sheet (Arabic-only, RTL; light by default, dark via the ☾ button). Rebuilt from a reverse‑engineering
 of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the raw APK/DB in
 `apk/` and `db/` (git‑ignored). Live: https://surah-tafsir.pages.dev
 
@@ -10,6 +10,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `src/lib.mjs`: `ar()`, `ayahWord()`, `verses`, `passages()`, `passageFor()`, `JUZ` (from the page files). Reads data by cwd
   path (`src/data/...`), never `import.meta.url` — Astro's prerender bundling breaks that.
 - `src/data/`: Tanzil text, `tafsir/<n>.json` passages, `meta.json` (generated), `mushaf-ayahs.json` (ayah→page) and `mushaf-surahs.json` (page ranges).
+- `public/tafsir/{muyassar,mukhtasar}/<n>.json`: `[{a,b,t}]` passages, fetched by the sheet; made by `tools/export_extra_tafsir.py` from the git-ignored `data/tafsir-json/*.jsonl`. Saʿdī stays in the page as `<template>`s.
 - `public/mushaf/pages/<1..604>.json`: API-generated 15-line page data (words, surah bands, juz); fetched by the reader and pre-cached.
 - `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
@@ -40,6 +41,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Astro prerender cannot read `new URL('…', import.meta.url)` data files → use cwd paths in `lib.mjs`.
 - `npx`/wrangler fail here with a read-only `~/.npm` and `~/.wrangler` → set `npm_config_cache=$PWD/.npm-cache`
   and `HOME=$PWD/.home` (the refreshed Cloudflare token lives there, untracked).
+- The reader is one screen that never scrolls: `fit()` picks the largest font that fits width and height; the top bar, tools row and page buttons are overlays toggled by `body.chrome` (tap outside the words). No `scrollIntoView`/`scrollTo` in the reader.
 - `[hidden]` is overridden by `display:flex`/`grid` → add `X[hidden]{display:none}` for every such class.
 - CSS classes don't reach inside SVG `<use>` → colour the `#orn` symbol with inline `style="fill:var(…)"`.
 - Light-only pages get force-darkened by Chrome Android → keep the `color-scheme: light dark` meta and all colours in the `:root` / `[data-theme='dark']` vars; no literals outside them.

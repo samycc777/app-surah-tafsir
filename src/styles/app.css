@@ -271,6 +271,13 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
 .taf p { margin: 0 0 .75em; }
 .taf .q { color: var(--brand); }
 .taf-note { margin: 0 0 12px; }
+.taf .fn { font-size: .86em; color: var(--muted); border-top: 1px solid var(--line); padding-top: .5em; }
+.taf-pick { display: flex; gap: 6px; padding: 4px 16px 8px; }
+.taf-pick button {
+  flex: 1; height: 36px; border: 1px solid var(--line); border-radius: 999px; background: var(--card);
+  color: var(--muted); font-family: var(--ui); font-size: .72rem; cursor: pointer;
+}
+.taf-pick button[aria-checked='true'] { background: var(--orn-fill); border-color: var(--gold); color: var(--orn-ink); font-weight: 700; }
 
 /* ── settings rows ───────────────────────────────────── */
 .row { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--line); width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: start; text-decoration: none; color: var(--ink); cursor: pointer; }
@@ -316,15 +323,30 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
 .prose-narrow { max-width: 640px; }
 @media (prefers-reduced-motion: reduce) {
   .sheet, .sheet-wrap .backdrop, .toast { animation: none; }
+  body.mushaf-shell .bar, .r-head, .m-nav { transition: none; }
 }
 
 /* ── mushaf reader ───────────────────────────────────── */
-body.mushaf-shell .page { padding: 4px 8px 18px; }
-.mushaf { max-width: 760px; margin: 0 auto; }
+/* The page fills the screen and never scrolls; the top bar, the tools row and the page
+   buttons are overlays that a tap on the page (outside the words) shows or hides. */
+:root:has(body.mushaf-shell) { overflow: hidden; }
+body.mushaf-shell { height: 100dvh; overflow: hidden; padding-bottom: 0; overscroll-behavior: none; }
+body.mushaf-shell .page { height: 100%; max-width: none; padding: 6px 6px calc(6px + var(--safe-b)); box-sizing: border-box; }
+.mushaf {
+  height: 100%; margin: 0 auto; display: flex; flex-direction: column;
+  max-width: min(760px, calc((100dvh - 12px) * .64));
+}
+body.mushaf-shell .bar { position: fixed; left: 0; right: 0; transition: transform .2s ease; }
+body.mushaf-shell:not(.chrome) .bar { transform: translateY(-100%); box-shadow: none; }
+.r-head {
+  position: fixed; z-index: 29; left: 0; right: 0; top: var(--bar-h, 60px); background: var(--bar);
+  box-shadow: 0 1px 0 var(--line), 0 6px 14px var(--shadow); transition: transform .2s ease, opacity .2s ease;
+}
+body.mushaf-shell:not(.chrome) .r-head { transform: translateY(-12px); opacity: 0; pointer-events: none; }
 .r-tools { display: flex; justify-content: center; gap: 6px; margin: 2px 0 0; }
 .r-nav {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px;
-  margin: 2px 4px 8px; font-family: var(--ui); font-size: .72rem;
+  max-width: 760px; margin: 2px auto 6px; padding: 0 12px; font-family: var(--ui); font-size: .72rem;
 }
 .r-nav a { display: inline-flex; align-items: center; gap: 2px; color: var(--muted); white-space: nowrap; }
 .r-nav a:first-child { justify-self: start; }
@@ -332,11 +354,13 @@ body.mushaf-shell .page { padding: 4px 8px 18px; }
 .r-info { color: var(--gold-ink); font-weight: 700; }
 
 .m-frame {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
   padding: 9px; border-radius: 30px;
   background: var(--frame) var(--frame-pattern) center / 14px 14px repeat;
   box-shadow: 0 2px 12px var(--shadow);
 }
 .m-page {
+  flex: 1; min-height: 0; display: flex; flex-direction: column;
   background: var(--page); border-radius: 22px; padding: 8px 6px 6px;
   border: 1.5px solid var(--gold);
   box-shadow: inset 0 0 0 3px var(--page), inset 0 0 0 4px var(--gold-line);
@@ -354,14 +378,15 @@ body.mushaf-shell .page { padding: 4px 8px 18px; }
   font-family: var(--ui); font-size: .66rem; font-weight: 700; line-height: 1.8;
 }
 .m-lines {
+  flex: 1; min-height: 0; overflow: hidden; display: flex; flex-direction: column; justify-content: space-evenly;
   font-family: var(--mushaf);
   font-size: clamp(1.05rem, 4.6vw, 1.4rem);
-  line-height: 2.2; color: var(--page-ink); padding: 2px 6px 4px;
+  line-height: 2; color: var(--page-ink); padding: 2px 6px 4px;
 }
+.m-lines.sparse { justify-content: center; }
 .m-line { display: flex; justify-content: space-between; align-items: baseline; gap: .06em; }
 .m-line.center { justify-content: center; }
-.m-line.blank { min-height: 2.2em; }
-.m-lines.sparse { font-size: clamp(1.3rem, 5.8vw, 1.75rem); }
+.m-line.blank { min-height: 2em; }
 .m-line .w, .m-line .m-pause { white-space: nowrap; }
 .w { border-radius: .2em; cursor: pointer; transition: background .15s; }
 .w:hover, .w.on { background: var(--result-mark); }
@@ -386,7 +411,13 @@ body.mushaf-shell .page { padding: 4px 8px 18px; }
 }
 .m-band span b { font-weight: 400; background: var(--orn-fill); padding: 0 12px; border-radius: 8px; }
 .m-bas { text-align: center; font-family: var(--mushaf); font-size: 1.08em; color: var(--page-ink); line-height: 1.7; padding: 1px 0; }
-.m-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 10px 2px 2px; }
+.m-nav {
+  position: fixed; z-index: 29; left: 0; right: 0; bottom: 0; background: var(--bar);
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;
+  padding: 8px 12px calc(8px + var(--safe-b)); box-shadow: 0 -1px 0 var(--line), 0 -6px 14px var(--shadow);
+  transition: transform .2s ease;
+}
+body.mushaf-shell:not(.chrome) .m-nav { transform: translateY(100%); box-shadow: none; }
 .m-btn {
   display: inline-flex; align-items: center; justify-content: center; gap: 4px;
   height: 42px; padding: 0 14px; border: 1px solid var(--line); border-radius: 999px;

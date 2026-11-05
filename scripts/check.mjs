@@ -1,4 +1,5 @@
 // Data guard: every ayah has a tafsir passage, and the meta file matches the data.
+import { readFileSync } from 'node:fs';
 import { META, passageFor, passages, verses } from '../src/lib.mjs';
 
 let bad = 0;
@@ -16,6 +17,12 @@ for (const m of META) {
       bad++;
       break;
     }
+  }
+  for (const k of ['muyassar', 'mukhtasar']) {
+    const list = JSON.parse(readFileSync(`public/tafsir/${k}/${m.n}.json`, 'utf8'));
+    let next = 1;
+    for (const x of list) { if (x.a !== next || x.b < x.a || !x.t.trim()) break; next = x.b + 1; }
+    if (next !== vs.length + 1) { console.log(`surah ${m.n}: ${k} breaks at ayah ${next}`); bad++; }
   }
   if (m.full && m.pct < 97) {
     console.log(`surah ${m.n}: marked full but ${m.pct}%`);
