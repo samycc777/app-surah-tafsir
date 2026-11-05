@@ -5,6 +5,9 @@
   const native = window.SurahNative || null; // set by the Android app
   const ORIGIN = native ? 'https://surah-tafsir.pages.dev' : location.origin;
   const $ = (s, r = document) => r.querySelector(s);
+  // Android back button: the app asks surahBack() first; true = a sheet was closed, stay on the page.
+  const backHandlers = [];
+  window.surahBack = () => backHandlers.some((f) => f());
   const $$ = (s, r = document) => [...r.querySelectorAll(s)];
   const store = {
     get(k) { try { return localStorage.getItem('surah:' + k); } catch { return null; } },
@@ -56,6 +59,7 @@
     document.body.style.overflow = '';
   };
   $('#open-settings')?.addEventListener('click', openSettings);
+  backHandlers.push(() => !!setWrap && !setWrap.hidden && (closeSettings(), true));
   setWrap?.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSettings));
   $('#set-harakat')?.addEventListener('change', (e) => {
     harakat = e.target.checked;
@@ -337,6 +341,7 @@
     });
 
     sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
+    backHandlers.push(() => !sheet.hidden && (closeSheet(), true));
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !sheet.hidden) closeSheet();
     });
@@ -373,6 +378,7 @@
     $('#taf-copy').addEventListener('click', () => copyText(passageText().text));
     $('#taf-share').addEventListener('click', async () => {
       const { text, label: l } = passageText();
+      if (native?.share) { native.share(text); return; }
       if (navigator.share) {
         try { await navigator.share({ title: `تفسير السعدي · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
         return;
@@ -393,6 +399,7 @@
     });
     $('#r-share')?.addEventListener('click', async () => {
       const url = `${ORIGIN}/surah/${n}/#${pageAyah()}`;
+      if (native?.share) { native.share(`سورة ${name}\n${url}`); return; }
       if (navigator.share) { try { await navigator.share({ title: `سورة ${name}`, url }); } catch { /* cancelled */ } return; }
       copyText(url);
     });

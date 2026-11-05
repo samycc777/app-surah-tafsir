@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Color;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Bundle;
 import android.view.View;
+import android.view.WindowManager;
 import android.webkit.JavascriptInterface;
 import android.webkit.WebResourceRequest;
 import android.webkit.WebResourceResponse;
@@ -58,6 +60,12 @@ public class MainActivity extends Activity {
         web = new WebView(this);
         setContentView(web);
         bars("light");
+        // fullscreen: draw under the camera hole instead of leaving a black strip there
+        if (Build.VERSION.SDK_INT >= 28) {
+            WindowManager.LayoutParams lp = getWindow().getAttributes();
+            lp.layoutInDisplayCutoutMode = WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES;
+            getWindow().setAttributes(lp);
+        }
 
         WebSettings s = web.getSettings();
         s.setJavaScriptEnabled(true);
@@ -99,6 +107,13 @@ public class MainActivity extends Activity {
         @JavascriptInterface
         public void theme(String t) { runOnUiThread(() -> bars(t)); }
 
+        /** Android share sheet (the WebView has no navigator.share). */
+        @JavascriptInterface
+        public void share(String text) {
+            Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
+            runOnUiThread(() -> startActivity(Intent.createChooser(i, null)));
+        }
+
         @JavascriptInterface
         public void fullscreen() {
             runOnUiThread(() -> {
@@ -119,7 +134,11 @@ public class MainActivity extends Activity {
 
     @Override
     public void onBackPressed() {
-        if (web.canGoBack()) web.goBack();
-        else super.onBackPressed();
+        // an open sheet closes first; only then does back leave the page
+        web.evaluateJavascript("window.surahBack ? surahBack() : false", v -> {
+            if ("true".equals(v)) return;
+            if (web.canGoBack()) web.goBack();
+            else finish();
+        });
     }
 }
