@@ -46,4 +46,5 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - The Tanzil notice has an unbreakable `====` line and is English → `.notice` needs `overflow-wrap:anywhere` and `direction:ltr`; otherwise the RTL page scrolls sideways.
 - Capacitor's local server sends every extension-less path to the root `index.html` → the app uses its own WebViewAssetLoader handler that maps `/x/` to `x/index.html`.
 - Inside the app `location.origin` is `appassets.androidplatform.net` → share links use `ORIGIN` (the public site); no service worker there.
+- Android's packager drops asset folders starting with `_` (Astro's default `_astro`) → the app showed unstyled pages; keep `build.assets: 'assets'`.
 - `public/mushaf/pages` is ~5 MB and pre-cached by the SW; don't fetch all pages in the page HTML — the reader loads one JSON.
