@@ -21,3 +21,4 @@ android/.gradle/
 android/build/
 android/app/src/main/assets/
 *.jks
+public/qcf/

@@ -15,12 +15,13 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
 - `tools/`: `make_meta.py` (meta + harakat audit), `export_tafsir.py` (APK DB → JSONL), `fetch_mushaf.py` (Quran.com API → page JSON, one-time), `shots.py` (smoke test).
-- `android/`: plain WebView app (`dev.pages.surahtafsir`) that shows the built `dist/` from `assets/www` via WebViewAssetLoader (works offline); `window.SurahNative` bridges theme bar colour, fullscreen and the share sheet; the back button asks `window.surahBack()` (closes an open sheet) before leaving the page.
+- `android/`: plain WebView app (`dev.pages.surahtafsir`) that shows the built `dist/` from `assets/www` via WebViewAssetLoader (works offline); `window.SurahNative` bridges theme bar colour, fullscreen, `immersive()` (the reader hides the phone's bars with its own), `cutoutTop()` and the share sheet; WebView debugging is on (DevTools over adb); the back button asks `window.surahBack()` (closes an open sheet) before leaving the page.
 - `docs/notes/`: RE report, artifact inventory (raw APK/DB are git-ignored, in the main folder only), UI screenshots.
 
 ## Commands
 - `npm ci`, `npm run dev`, `npm run build`, `npm run check`.
 - Rebuild mushaf data (network): `python3 tools/fetch_mushaf.py` (raw API cache in git-ignored `work/api`).
+- Page fonts (needed before `npm run build` for deploys): `python3 tools/fetch_qcf.py`.
 - Verify: `python3 -m http.server 8788 --directory dist` + `python3 tools/shots.py`.
 - Deploy: `HOME=$PWD/.home npx wrangler@3 pages deploy dist --project-name surah-tafsir --branch main`.
 - APK: every push to main runs `.github/workflows/android.yml` (GitHub: samycc777/app-surah-tafsir, public: private repos get no Actions minutes) → release `app-vN` with `surah-tafsir.apk`.
@@ -31,7 +32,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
   not; `meta.json.full` drives the notice. Re-run `tools/make_meta.py` after any tafsir data change.
 - Arabic UI only; no editorial text beyond UI words and the About page.
 - Look follows web.surahapp.com/ar: cream and gold, star badges, framed mushaf page; all drawn in our own CSS/SVG, never their images or fonts. Theme is `html[data-theme]` (saved as `surah:theme`), not the system setting.
-- The mushaf layout and Uthmani words come from the Quran.com API; the app's line PNGs/fonts are never reused. The page font is Amiri Quran (OFL).
+- The mushaf layout, Uthmani words and glyph codes (`g`) come from the Quran.com API; the app's line PNGs/fonts are never reused. Pages are drawn with the King Fahd Complex QCF V2 page fonts `public/qcf/p<N>.woff2` (98 MB, git-ignored, `tools/fetch_qcf.py`; CI fetches them; SW caches them on first view, not precached); Amiri Quran is only the fallback.
 - The API returns pause/sajdah marks as separate words: merge them into the adjacent word or they float at line edges; leading pauses belong to the previous page/line.
 - Every page is static; the service worker pre‑caches all of them. Its version derives from file
   sizes — keep `scripts/sw-manifest.mjs` in the build.
@@ -41,6 +42,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Astro prerender cannot read `new URL('…', import.meta.url)` data files → use cwd paths in `lib.mjs`.
 - `npx`/wrangler fail here with a read-only `~/.npm` and `~/.wrangler` → set `npm_config_cache=$PWD/.npm-cache`
   and `HOME=$PWD/.home` (the refreshed Cloudflare token lives there, untracked).
+- The reader must look like the printed mushaf / Surah app: no frame, 15 QCF lines edge to edge, one small header line; Amiri with spread-out words looked ugly.
 - The reader is one screen that never scrolls: `fit()` picks the largest font that fits width and height; the top bar, tools row and page buttons are overlays toggled by `body.chrome` (tap outside the words). No `scrollIntoView`/`scrollTo` in the reader.
 - `[hidden]` is overridden by `display:flex`/`grid` → add `X[hidden]{display:none}` for every such class.
 - CSS classes don't reach inside SVG `<use>` → colour the `#orn` symbol with inline `style="fill:var(…)"`.

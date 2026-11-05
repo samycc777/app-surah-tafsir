@@ -93,6 +93,7 @@
     native?.theme(t);
   };
   native?.theme(document.documentElement.dataset.theme || 'light');
+  if (!document.body.classList.contains('mushaf-shell')) native?.immersive?.(false); // the reader hides the phone's bars
   $('#theme-toggle')?.addEventListener('click', () => {
     setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
   });
@@ -167,6 +168,21 @@
 
     let page = first, pageData = null, cur = 0, req = 0;
 
+    /* King Fahd Complex QCF page fonts: page p's words are glyphs `g` of the font /qcf/p<p>.woff2.
+       If a font can't load (offline, not cached yet) the page falls back to Amiri text `t`. */
+    const fonts = {};
+    const fontFor = (p) => {
+      fonts[p] ||= new FontFace(`qcf${p}`, `url(/qcf/p${p}.woff2)`, { display: 'block' }).load()
+        .then((f) => { document.fonts.add(f); return true; })
+        .catch(() => { delete fonts[p]; return false; });
+      return fonts[p];
+    };
+    let basGlyphs = null; // the basmala = the first four words of 1:1, drawn with page 1's font
+    const basReady = fetch('/mushaf/pages/1.json').then((r) => r.json()).then((d) => {
+      basGlyphs = d.rows.flatMap((r) => r.words || []).filter((w) => w.v === '1:1' && w.k === 'word').map((w) => w.g);
+      return fontFor(1);
+    }).catch(() => false);
+
     /* three tafsirs: Saadi is in the page (templates), the other two are fetched per surah */
     const KINDS = { saadi: 'تفسير السعدي', muyassar: 'التفسير الميسر', mukhtasar: 'المختصر في التفسير' };
     let kind = KINDS[store.get('tafsir')] ? store.get('tafsir') : 'saadi';
@@ -201,7 +217,7 @@
       return null;
     };
 
-    function renderPage(d) {
+    function renderPage(d, qcf, bas) {
       const rows = d.rows.map((r) => (r.words ? { words: r.words.map((w) => ({ ...w })) } : r));
       let last = null;
       for (const r of rows) {
@@ -209,37 +225,44 @@
         if (!r.words) continue;
         while (r.words.length && (r.words[0].k === 'pause' || r.words[0].k === 'sajdah')) {
           const mark = r.words.shift();
-          if (last) last.t += ` ${mark.t}`;
+          if (last) { last.t += ` ${mark.t}`; last.g = (last.g || '') + (mark.g || ''); }
         }
         if (r.words.length) last = r.words[r.words.length - 1];
       }
       const textRows = rows.filter((r) => r.words && r.words.length).length;
       linesEl.classList.toggle('sparse', textRows <= 8);
+      linesEl.classList.toggle('qcf', qcf);
+      linesEl.style.fontFamily = qcf ? `qcf${d.p}` : '';
       // the opening pages (Fatiha, Baqara) end in empty rows: drop them so the text sits mid-page
       if (textRows <= 8) while (rows.length && rows[rows.length - 1].blank) rows.pop();
+      linesEl.style.setProperty('--rows', rows.length);
+      const G = (w) => esc(qcf ? w.g : w.t);
       linesEl.innerHTML = rows.map((r) => {
-        if (r.band) return `<div class="m-band"><span><b>سورة ${esc(r.band.name)}</b></span></div>`;
-        if (r.bas) return `<div class="m-bas">${BASMALA}</div>`;
+        if (r.band) return `<div class="m-band"><span>سورة ${esc(r.band.name)}</span></div>`;
+        if (r.bas) return bas && basGlyphs
+          ? `<div class="m-bas qcf-bas">${basGlyphs.map(esc).join(' ')}</div>`
+          : `<div class="m-bas">${BASMALA}</div>`;
         if (r.blank) return `<div class="m-line blank"></div>`;
         const raw = r.words || [];
         const ws = [];
         for (const w of raw) {
           if ((w.k === 'pause' || w.k === 'sajdah') && ws.length) {
             ws[ws.length - 1].t += ` ${w.t}`;
+            ws[ws.length - 1].g = (ws[ws.length - 1].g || '') + (w.g || '');
           } else {
-            ws.push({ t: w.t, v: w.v, k: w.k });
+            ws.push({ t: w.t, v: w.v, k: w.k, g: w.g });
           }
         }
         const basmala = ws.length && ws.every((w) => w.v === '1:1');
-        const center = ws.length <= 3 || basmala ? ' center' : '';
+        const center = (!qcf && ws.length <= 3) || basmala ? ' center' : '';
         return `<div class="m-line${center}">` + ws.map((w) => {
           if (w.k === 'end') {
-            return `<span class="m-num" data-v="${w.v}" role="button" tabindex="0" aria-label="الآية ${w.v.split(':')[1]}">${esc(w.t)}</span>`;
+            return `<span class="m-num" data-v="${w.v}" role="button" tabindex="0" aria-label="الآية ${w.v.split(':')[1]}">${G(w)}</span>`;
           }
           if (w.k === 'pause' || w.k === 'sajdah') {
-            return `<span class="m-pause" data-v="${w.v}">${esc(w.t)}</span>`;
+            return `<span class="m-pause" data-v="${w.v}">${G(w)}</span>`;
           }
-          return `<span class="w" data-v="${w.v}">${esc(w.t)}</span>`;
+          return `<span class="w" data-v="${w.v}">${G(w)}</span>`;
         }).join('') + `</div>`;
       }).join('');
       fit();
@@ -251,6 +274,7 @@
         ? `${a.name} ${ar(a.a)}–${ar(b.a)}`
         : `${a.name} ${ar(a.a)} · ${b.name} ${ar(b.a)}`;
       pageEl.textContent = ar(d.p);
+      startEl.textContent = `سورة ${a.name}`;
       juzEl.textContent = d.juz ? `الجزء ${ar(d.juz)}` : '';
       const i = pages.indexOf(d.p);
       countEl.textContent = `الصفحة ${ar((i < 0 ? 0 : i) + 1)} من ${ar(pages.length)}`;
@@ -258,20 +282,32 @@
       nextBtn.disabled = d.p >= last;
     }
 
+    /* One font size for the whole page, as large as the screen allows: the widest line fills the
+       width (QCF lines are all about as wide as in print), and 15 rows fill the height. If the
+       height is the limit (wide screens), the page narrows to the text and stays centred. */
     function fit() {
-      const lines = [...linesEl.querySelectorAll('.m-line')];
-      const ok = (px) => {
-        linesEl.style.fontSize = `${px}px`;
-        return linesEl.scrollHeight <= linesEl.clientHeight + 1 && !lines.some((l) => l.scrollWidth > l.clientWidth + 1);
-      };
-      const w = linesEl.clientWidth;
-      let lo = 10, hi = (w / 17) * (linesEl.classList.contains('sparse') ? 1.3 : 1);
-      if (ok(hi)) return;
-      for (let i = 0; i < 9; i++) {
-        const mid = (lo + hi) / 2;
-        if (ok(mid)) lo = mid; else hi = mid;
-      }
-      ok(lo);
+      const box = linesEl.parentElement;
+      const W = box.clientWidth - 14, H = linesEl.clientHeight || box.clientHeight;
+      if (!W || !H) return;
+      const lines = [...linesEl.querySelectorAll('.m-line:not(.blank)')];
+      linesEl.style.width = '';
+      linesEl.style.fontSize = '100px';
+      linesEl.classList.add('measure');
+      const nat = lines.map((l) => l.scrollWidth);
+      linesEl.classList.remove('measure');
+      const widest = Math.max(1, ...nat);
+      const qcf = linesEl.classList.contains('qcf');
+      const sparse = linesEl.classList.contains('sparse');
+      const LH = qcf ? 1.75 : 1.9; // row height needed, in font sizes
+      const byH = H / 15 / LH * (sparse ? 1.35 : 1);
+      const byW = (W * 0.985 * 100) / widest;
+      const px = Math.max(10, Math.min(byW, byH));
+      linesEl.style.fontSize = `${px}px`;
+      const pw = Math.min(W, (widest * px) / 100 / 0.985);
+      linesEl.style.width = `${pw}px`;
+      box.style.setProperty('--pw', `${pw}px`); // the header line keeps to the text's width
+      // a line much shorter than the widest (end of the Quran's short surahs) is centred, not stretched
+      lines.forEach((l, i) => l.classList.toggle('short', qcf && nat[i] < widest * 0.8));
     }
 
     function highlight(v) {
@@ -335,10 +371,12 @@
         if (my === req) toast('تعذّر تحميل الصفحة');
         return;
       }
+      const [qcf, bas] = await Promise.all([fontFor(p), d.rows.some((r) => r.bas) ? basReady : false]);
       if (my !== req) return;
       page = p;
       pageData = d;
-      renderPage(d);
+      renderPage(d, qcf && d.rows.every((r) => !r.words || r.words.every((w) => w.g)), bas);
+      [p - 1, p + 1].forEach((q) => q >= 1 && q <= 604 && setTimeout(() => fontFor(q), 300)); // next swipe is instant
       setHead(d);
       window.dispatchEvent(new Event('pageshown'));
       const a = surahAyahOnPage(d);
@@ -455,9 +493,15 @@
     const setBarH = () => document.documentElement.style.setProperty('--bar-h', `${bar?.offsetHeight || 60}px`);
     setBarH();
     document.fonts?.ready.then(() => fit());
+    // in the app the phone's own status/navigation bars hide and show with ours
+    const cut = native?.cutoutTop ? native.cutoutTop() : 0;
+    document.documentElement.style.setProperty('--cut-top', `${cut}px`);
+    const syncNative = () => native?.immersive?.(!document.body.classList.contains('chrome'));
+    syncNative();
     $('.m-frame').addEventListener('click', (e) => {
       if (e.target.closest('[data-v]')) return;
       document.body.classList.toggle('chrome');
+      syncNative();
     });
     if (!store.get('hint-bars')) {
       store.set('hint-bars', '1');

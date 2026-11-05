@@ -3,7 +3,8 @@
 
 One-time generator; the output is committed. Requires network for the first run
 (raw responses stay in work/api, git-ignored). The app's own line PNGs/fonts are
-NOT used: the API gives the Madinah page/line grouping and the Uthmani words.
+NOT used: the API gives the Madinah page/line grouping, the Uthmani words and
+the glyph codes of the King Fahd Complex QCF V2 page fonts (tools/fetch_qcf.py).
 """
 import json, os, sys, time, urllib.request
 from concurrent.futures import ThreadPoolExecutor
@@ -12,7 +13,7 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / 'work' / 'api'
 PAGES = ROOT / 'public' / 'mushaf' / 'pages'
-API = 'https://api.quran.com/api/v4/verses/by_page/{p}?words=true&word_fields=text_uthmani,line_number,page_number&per_page=50'
+API = 'https://api.quran.com/api/v4/verses/by_page/{p}?words=true&word_fields=text_uthmani,code_v2,line_number,page_number&per_page=50'
 UA = 'Mozilla/5.0 (compatible; surah-tafsir-build/1.0)'
 NAMES = [m['name'] for m in json.load(open(ROOT / 'src/data/meta.json'))]
 
@@ -67,6 +68,7 @@ def main():
                 txt = w.get('text_uthmani') or w.get('text') or ''
                 rows.setdefault(int(line), []).append({
                     't': txt, 'v': v['verse_key'], 'k': kind,
+                    'g': w.get('code_v2') or '',  # glyphs of the King Fahd page font public/qcf/p<page>.woff2
                 })
             ayah_page.setdefault(s, {}).setdefault(a, p)
         # rows: words per line, 1..15

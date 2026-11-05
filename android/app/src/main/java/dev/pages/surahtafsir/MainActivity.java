@@ -57,6 +57,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onCreate(Bundle state) {
         super.onCreate(state);
+        WebView.setWebContentsDebuggingEnabled(true); // lets adb + DevTools test the pages
         web = new WebView(this);
         setContentView(web);
         bars("light");
@@ -114,6 +115,27 @@ public class MainActivity extends Activity {
         public void share(String text) {
             Intent i = new Intent(Intent.ACTION_SEND).setType("text/plain").putExtra(Intent.EXTRA_TEXT, text);
             runOnUiThread(() -> startActivity(Intent.createChooser(i, null)));
+        }
+
+        /** Reader: hide the status and navigation bars while the page's own bars are hidden. */
+        @JavascriptInterface
+        public void immersive(boolean on) {
+            runOnUiThread(() -> {
+                full = on;
+                WindowInsetsControllerCompat ctl = WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+                ctl.setSystemBarsBehavior(WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE);
+                if (on) ctl.hide(WindowInsetsCompat.Type.systemBars());
+                else ctl.show(WindowInsetsCompat.Type.systemBars());
+            });
+        }
+
+        /** Height of the camera cut-out in CSS px, so the page header stays clear of it. */
+        @JavascriptInterface
+        public float cutoutTop() {
+            if (Build.VERSION.SDK_INT < 28) return 0;
+            android.view.WindowInsets in = getWindow().getDecorView().getRootWindowInsets();
+            if (in == null || in.getDisplayCutout() == null) return 0;
+            return in.getDisplayCutout().getSafeInsetTop() / getResources().getDisplayMetrics().density;
         }
 
         @JavascriptInterface

@@ -13,7 +13,7 @@ async function walk(dir) {
   for (const e of await readdir(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
     if (e.isDirectory()) {
-      if (e.name === 'search-index') continue; // generated, cached on demand
+      if (e.name === 'search-index' || e.name === 'qcf') continue; // cached on demand (qcf = 98 MB of page fonts)
       out.push(...await walk(p));
     } else {
       out.push(p);

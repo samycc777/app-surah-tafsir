@@ -14,6 +14,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22', cache: npm }
+      - run: python3 tools/fetch_qcf.py # page fonts (git-ignored, 98 MB)
       - run: npm ci && npm run build && npm run check
       - run: mkdir -p android/app/src/main/assets && rm -rf android/app/src/main/assets/www && cp -r dist android/app/src/main/assets/www && rm -f android/app/src/main/assets/www/sw.js
       - uses: actions/setup-java@v4

@@ -1,6 +1,7 @@
 /* Service worker — the precache list and version are written by scripts/sw-manifest.mjs after the build. */
 const VERSION = '__VERSION__';
 const PRECACHE = '__PRECACHE__';
+const FONTS = 'qcf'; // page fonts: cached when a page is first read, kept across versions
 
 self.addEventListener('install', (event) => {
   event.waitUntil((async () => {
@@ -13,7 +14,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil((async () => {
     const keys = await caches.keys();
-    await Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k)));
+    await Promise.all(keys.filter((k) => k !== VERSION && k !== FONTS).map((k) => caches.delete(k)));
     await self.clients.claim();
   })());
 });
@@ -25,7 +26,7 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
 
   event.respondWith((async () => {
-    const cache = await caches.open(VERSION);
+    const cache = await caches.open(url.pathname.startsWith('/qcf/') ? FONTS : VERSION);
     const hit = await cache.match(req);
     if (hit) return hit;
     try {
