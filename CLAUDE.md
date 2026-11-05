@@ -1,6 +1,6 @@
 # app-surah
 
-PWA Qur'an reader with Saʿdī tafsir (Arabic-only, RTL, light). Rebuilt from a reverse‑engineering
+PWA Qur'an reader with Saʿdī tafsir (Arabic-only, RTL; light or dark by system). Rebuilt from a reverse‑engineering
 of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the raw APK/DB in
 `apk/` and `db/` (git‑ignored). Live: https://surah-tafsir.pages.dev
 
@@ -33,3 +33,5 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `npx`/wrangler fail here with a read-only `~/.npm` and `~/.wrangler` → set `npm_config_cache=$PWD/.npm-cache`
   and `HOME=$PWD/.home` (the refreshed Cloudflare token lives there, untracked).
 - `[hidden]` is overridden by `display:flex` → keep `.row[hidden]{display:none}`.
+- Light-only pages get force-darkened by Chrome Android → keep `color-scheme: light dark`, the two `theme-color` metas and all colours in the `:root` vars; no literals outside them.
+- The Tanzil notice has an unbreakable `====` line and is English → `.notice` needs `overflow-wrap:anywhere` and `direction:ltr`; otherwise the RTL page scrolls sideways.

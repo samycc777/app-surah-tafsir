@@ -8,6 +8,7 @@ import Icon from '../components/Icon.astro';
     <input type="search" id="q" name="q" placeholder="كلمة أو عبارة…" aria-label="بحث" />
     <button type="submit" aria-label="بحث"><Icon name="search" size={20} /></button>
   </form>
+  <p class="note" id="hint">اكتب كلمة أو عبارة للبحث في نص التفسير، مثل «الرحمن».</p>
   <div class="note" id="status"></div>
   <ul class="results" id="results"></ul>
   <button type="button" class="more" id="more" hidden>المزيد</button>

@@ -1,5 +1,6 @@
 ---
 import App from '../../layouts/App.astro';
+import Icon from '../../components/Icon.astro';
 import { NAMES, ar, ayahWord, basmala, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
 
 export function getStaticPaths() {
@@ -59,7 +60,7 @@ const pass = vs.map((_, i) => passageFor(ps, i + 1));
       <div class="grab"></div>
       <header class="sheet-head">
         <h2 id="taf-title">التفسير<span class="sub" id="taf-sub"></span></h2>
-        <button class="iconbtn" data-close aria-label="إغلاق" type="button">✕</button>
+        <button class="iconbtn" data-close aria-label="إغلاق" type="button"><Icon name="close" /></button>
       </header>
       <div class="sheet-body">
         <div class="ayahbox" id="taf-ayah"></div>
@@ -67,12 +68,11 @@ const pass = vs.map((_, i) => passageFor(ps, i + 1));
         <div class="taf" id="taf-body"></div>
       </div>
       <footer class="sheet-foot">
-        <button class="fbtn" id="taf-prev" type="button" aria-label="الآية السابقة">›</button>
-        <button class="fbtn" id="taf-next" type="button" aria-label="الآية التالية">‹</button>
-        <span class="spacer"></span>
-        <button class="fbtn" id="taf-bookmark" type="button" aria-pressed="false" aria-label="حفظ"><span id="taf-bm-icon">☆</span></button>
-        <button class="fbtn" id="taf-copy" type="button">نسخ</button>
-        <button class="fbtn" id="taf-share" type="button">مشاركة</button>
+        <button class="fbtn" id="taf-prev" type="button" aria-label="الآية السابقة"><Icon name="chevron" size={16} /><span>السابق</span></button>
+        <button class="fbtn" id="taf-next" type="button" aria-label="الآية التالية"><Icon name="chevron" size={16} /><span>التالي</span></button>
+        <button class="fbtn" id="taf-bookmark" type="button" aria-pressed="false" aria-label="حفظ"><Icon name="bookmark" size={16} /><span>حفظ</span></button>
+        <button class="fbtn" id="taf-copy" type="button"><Icon name="copy" size={16} /><span>نسخ</span></button>
+        <button class="fbtn" id="taf-share" type="button"><Icon name="share" size={16} /><span>مشاركة</span></button>
       </footer>
     </section>
   </div>
