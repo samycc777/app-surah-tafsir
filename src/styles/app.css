@@ -267,6 +267,9 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
   padding: 10px 14px; margin: 8px 0 12px; color: var(--page-ink);
   max-height: 34vh; overflow-y: auto;
 }
+/* QCF page font: the same letters as the mushaf page */
+.ayahbox.qcf { font-size: calc(1.45rem * var(--fs)); line-height: 2; word-spacing: .05em; text-align: justify; }
+.ayahbox.qcf .an { color: var(--gold-ink); }
 .taf { font-size: calc(1.05rem * var(--fs)); line-height: 2.05; }
 .taf p { margin: 0 0 .75em; }
 .taf .q { color: var(--brand); }
@@ -354,8 +357,16 @@ body.mushaf-shell:not(.chrome) .r-head { transform: translateY(-12px); opacity: 
 
 /* Like the printed mushaf (and the Surah app): no frame, the 15 lines fill the screen
    edge to edge, one quiet header line on top. */
-.m-frame { flex: 1; min-height: 0; display: flex; flex-direction: column; }
+.m-frame {
+  flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; overflow: hidden;
+  touch-action: pan-y; user-select: none; -webkit-user-select: none;
+}
+.m-track { flex: 1; min-height: 0; display: flex; flex-direction: column; position: relative; will-change: transform; }
 .m-page { flex: 1; min-height: 0; display: flex; flex-direction: column; background: var(--page); }
+/* the neighbour pages wait beside the page (RTL book: next on the left) */
+.m-page.ghost { position: absolute; inset: 0; pointer-events: none; }
+.m-page.ghost.prev { transform: translateX(100%); }
+.m-page.ghost.next { transform: translateX(-100%); }
 body.mushaf-shell, body.mushaf-shell .mushaf { background: var(--page); }
 .m-head {
   display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px;

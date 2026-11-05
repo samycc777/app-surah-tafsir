@@ -177,6 +177,31 @@
         .catch(() => { delete fonts[p]; return false; });
       return fonts[p];
     };
+    const pageJson = {};
+    const getPage = (p) => {
+      pageJson[p] ||= fetch(`/mushaf/pages/${p}.json`, { cache: 'no-cache' })
+        .then((r) => { if (!r.ok) throw new Error('page'); return r.json(); })
+        .catch((e) => { delete pageJson[p]; throw e; });
+      return pageJson[p];
+    };
+    const qcfOk = (d) => d.rows.every((r) => !r.words || r.words.every((w) => w.g));
+
+    /* Page turns slide like a book read right to left: the next page waits on the left, the previous
+       on the right; both are drawn in advance so the page follows the finger. */
+    const track = $('#m-track');
+    const curPanel = linesEl.parentElement;
+    const ghost = (cls) => {
+      const el = curPanel.cloneNode(true);
+      el.querySelectorAll('[id]').forEach((e) => e.removeAttribute('id'));
+      el.removeAttribute('aria-live');
+      el.setAttribute('aria-hidden', 'true');
+      el.classList.add('ghost', cls);
+      track.append(el);
+      return el;
+    };
+    const side = { [-1]: ghost('prev'), [1]: ghost('next') };
+    const sideLines = (k) => side[k].querySelector('.m-lines');
+
     let basGlyphs = null; // the basmala = the first four words of 1:1, drawn with page 1's font
     const basReady = fetch('/mushaf/pages/1.json').then((r) => r.json()).then((d) => {
       basGlyphs = d.rows.flatMap((r) => r.words || []).filter((w) => w.v === '1:1' && w.k === 'word').map((w) => w.g);
@@ -217,7 +242,7 @@
       return null;
     };
 
-    function renderPage(d, qcf, bas) {
+    function renderPage(d, qcf, bas, L = linesEl) {
       const rows = d.rows.map((r) => (r.words ? { words: r.words.map((w) => ({ ...w })) } : r));
       let last = null;
       for (const r of rows) {
@@ -230,14 +255,14 @@
         if (r.words.length) last = r.words[r.words.length - 1];
       }
       const textRows = rows.filter((r) => r.words && r.words.length).length;
-      linesEl.classList.toggle('sparse', textRows <= 8);
-      linesEl.classList.toggle('qcf', qcf);
-      linesEl.style.fontFamily = qcf ? `qcf${d.p}` : '';
+      L.classList.toggle('sparse', textRows <= 8);
+      L.classList.toggle('qcf', qcf);
+      L.style.fontFamily = qcf ? `qcf${d.p}` : '';
       // the opening pages (Fatiha, Baqara) end in empty rows: drop them so the text sits mid-page
       if (textRows <= 8) while (rows.length && rows[rows.length - 1].blank) rows.pop();
-      linesEl.style.setProperty('--rows', rows.length);
+      L.style.setProperty('--rows', rows.length);
       const G = (w) => esc(qcf ? w.g : w.t);
-      linesEl.innerHTML = rows.map((r) => {
+      L.innerHTML = rows.map((r) => {
         if (r.band) return `<div class="m-band"><span>سورة ${esc(r.band.name)}</span></div>`;
         if (r.bas) return bas && basGlyphs
           ? `<div class="m-bas qcf-bas">${basGlyphs.map(esc).join(' ')}</div>`
@@ -265,17 +290,17 @@
           return `<span class="w" data-v="${w.v}">${G(w)}</span>`;
         }).join('') + `</div>`;
       }).join('');
-      fit();
+      fit(L);
+    }
+
+    function headInto(panel, d) {
+      panel.querySelector('.m-start').textContent = `سورة ${d.s.name}`;
+      panel.querySelector('.m-page-no').textContent = ar(d.p);
+      panel.querySelector('.m-juz').textContent = d.juz ? `الجزء ${ar(d.juz)}` : '';
     }
 
     function setHead(d) {
-      const a = d.s, b = d.e;
-      startEl.textContent = a.n === b.n
-        ? `${a.name} ${ar(a.a)}–${ar(b.a)}`
-        : `${a.name} ${ar(a.a)} · ${b.name} ${ar(b.a)}`;
-      pageEl.textContent = ar(d.p);
-      startEl.textContent = `سورة ${a.name}`;
-      juzEl.textContent = d.juz ? `الجزء ${ar(d.juz)}` : '';
+      headInto(curPanel, d);
       const i = pages.indexOf(d.p);
       countEl.textContent = `الصفحة ${ar((i < 0 ? 0 : i) + 1)} من ${ar(pages.length)}`;
       prevBtn.disabled = d.p <= first;
@@ -285,26 +310,26 @@
     /* One font size for the whole page, as large as the screen allows: the widest line fills the
        width (QCF lines are all about as wide as in print), and 15 rows fill the height. If the
        height is the limit (wide screens), the page narrows to the text and stays centred. */
-    function fit() {
-      const box = linesEl.parentElement;
-      const W = box.clientWidth - 14, H = linesEl.clientHeight || box.clientHeight;
+    function fit(L = linesEl) {
+      const box = L.parentElement;
+      const W = box.clientWidth - 14, H = L.clientHeight || box.clientHeight;
       if (!W || !H) return;
-      const lines = [...linesEl.querySelectorAll('.m-line:not(.blank)')];
-      linesEl.style.width = '';
-      linesEl.style.fontSize = '100px';
-      linesEl.classList.add('measure');
+      const lines = [...L.querySelectorAll('.m-line:not(.blank)')];
+      L.style.width = '';
+      L.style.fontSize = '100px';
+      L.classList.add('measure');
       const nat = lines.map((l) => l.scrollWidth);
-      linesEl.classList.remove('measure');
+      L.classList.remove('measure');
       const widest = Math.max(1, ...nat);
-      const qcf = linesEl.classList.contains('qcf');
-      const sparse = linesEl.classList.contains('sparse');
+      const qcf = L.classList.contains('qcf');
+      const sparse = L.classList.contains('sparse');
       const LH = qcf ? 1.75 : 1.9; // row height needed, in font sizes
       const byH = H / 15 / LH * (sparse ? 1.35 : 1);
       const byW = (W * 0.985 * 100) / widest;
       const px = Math.max(10, Math.min(byW, byH));
-      linesEl.style.fontSize = `${px}px`;
+      L.style.fontSize = `${px}px`;
       const pw = Math.min(W, (widest * px) / 100 / 0.985);
-      linesEl.style.width = `${pw}px`;
+      L.style.width = `${pw}px`;
       box.style.setProperty('--pw', `${pw}px`); // the header line keeps to the text's width
       // a line much shorter than the widest (end of the Quran's short surahs) is centred, not stretched
       lines.forEach((l, i) => l.classList.toggle('short', qcf && nat[i] < widest * 0.8));
@@ -315,10 +340,34 @@
       $$(`[data-v="${n}:${v}"]`, linesEl).forEach((e) => e.classList.add('on'));
     }
 
+    /* The ayah above the tafsir is drawn like the mushaf: its words in the QCF font of their page
+       (an ayah can run onto the next page). null = a font is missing; Amiri text is shown then. */
+    async function ayahQcf(v) {
+      const key = `${n}:${v}`;
+      const out = [];
+      for (let p = map[v]; p && p <= Math.min(604, map[v] + 2); p++) {
+        const mine = (await getPage(p)).rows.flatMap((r) => r.words || []).filter((w) => w.v === key);
+        if (!mine.length) { if (out.length) break; continue; }
+        if (mine.some((w) => !w.g) || !(await fontFor(p))) return null;
+        for (const w of mine) {
+          const g = esc(w.g);
+          if ((w.k === 'pause' || w.k === 'sajdah') && out.length) out[out.length - 1].g += g;
+          else out.push({ g, p, end: w.k === 'end' });
+        }
+        if (mine.some((w) => w.k === 'end')) break;
+      }
+      if (!out.length) return null;
+      return out.map((w) => `<span${w.end ? ' class="an"' : ''} style="font-family:qcf${w.p}">${w.g}</span>`).join(' ');
+    }
+
     let tafReq = 0;
     async function renderTaf(v) {
       const my = ++tafReq;
-      ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
+      const qa = await ayahQcf(v).catch(() => null);
+      if (my !== tafReq) return;
+      ayahBox.classList.toggle('qcf', !!qa);
+      if (qa) ayahBox.innerHTML = qa;
+      else ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
       if (kind === 'saadi') {
         const t = tplFor(passes[v - 1]);
         bodyEl.innerHTML = t ? t.innerHTML : '';
@@ -359,24 +408,41 @@
       history.replaceState(null, '', a ? `${location.pathname}#${a}` : location.pathname);
     }
 
+    async function drawSide(k, p) {
+      const L = sideLines(k);
+      side[k].dataset.p = p;
+      if (p < first || p > last) {
+        L.innerHTML = '';
+        side[k].querySelectorAll('.m-head span').forEach((e) => { e.textContent = ''; });
+        return;
+      }
+      try {
+        const d = await getPage(p);
+        const [qcf, bas] = await Promise.all([fontFor(p), d.rows.some((r) => r.bas) ? basReady : false]);
+        if (side[k].dataset.p !== String(p)) return;
+        renderPage(d, qcf && qcfOk(d), bas, L);
+        headInto(side[k], d);
+      } catch { /* drawn when it is turned to */ }
+    }
+
     async function load(p, opts = {}) {
-      if (p < first || p > last) return;
+      if (p < first || p > last) { opts.before?.(); return; }
       const my = ++req;
       let d;
       try {
-        const res = await fetch(`/mushaf/pages/${p}.json`, { cache: 'no-cache' });
-        if (!res.ok) throw new Error('page');
-        d = await res.json();
+        d = await getPage(p);
       } catch {
-        if (my === req) toast('تعذّر تحميل الصفحة');
+        if (my === req) { opts.before?.(); toast('تعذّر تحميل الصفحة'); }
         return;
       }
       const [qcf, bas] = await Promise.all([fontFor(p), d.rows.some((r) => r.bas) ? basReady : false]);
       if (my !== req) return;
       page = p;
       pageData = d;
-      renderPage(d, qcf && d.rows.every((r) => !r.words || r.words.every((w) => w.g)), bas);
-      [p - 1, p + 1].forEach((q) => q >= 1 && q <= 604 && setTimeout(() => fontFor(q), 300)); // next swipe is instant
+      opts.before?.(); // the slide ends in the same frame the page is drawn: no flash
+      renderPage(d, qcf && qcfOk(d), bas);
+      // the neighbours are drawn after this frame, so the next swipe shows real pages
+      setTimeout(() => { drawSide(-1, p - 1); drawSide(1, p + 1); }, 60);
       setHead(d);
       window.dispatchEvent(new Event('pageshown'));
       const a = surahAyahOnPage(d);
@@ -492,7 +558,7 @@
     const bar = $('.bar');
     const setBarH = () => document.documentElement.style.setProperty('--bar-h', `${bar?.offsetHeight || 60}px`);
     setBarH();
-    document.fonts?.ready.then(() => fit());
+    document.fonts?.ready.then(() => { fit(); fit(sideLines(-1)); fit(sideLines(1)); });
     // in the app the phone's own status/navigation bars hide and show with ours
     const cut = native?.cutoutTop ? native.cutoutTop() : 0;
     document.documentElement.style.setProperty('--cut-top', `${cut}px`);
@@ -508,26 +574,77 @@
       setTimeout(() => toast('اضغط خارج الكلمات لإظهار القائمة'), 600);
     }
 
-    prevBtn.addEventListener('click', () => load(page - 1));
-    nextBtn.addEventListener('click', () => load(page + 1));
+    /* The page follows the finger; let go past half the width, or with a flick, and it slides on.
+       RTL book order: dragging to the right brings in the next page (it waits on the left). */
+    let busy = false;
+    const setX = (x, ms = 0) => {
+      track.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.75,.25,1)` : 'none';
+      track.style.transform = x ? `translate3d(${x}px,0,0)` : '';
+    };
+    const has = (k) => page + k >= first && page + k <= last;
+    function turn(k, from = 0, v = 0) {
+      if (busy) return;
+      const W = track.clientWidth;
+      if (!has(k)) { setX(0, from ? 220 : 0); return; }
+      busy = true;
+      const to = k > 0 ? W : -W; // next (k = 1) slides in from the left, so the track moves right
+      const rest = Math.abs(to - from);
+      const ms = Math.round(Math.max(170, Math.min(340, rest / Math.max(Math.abs(v), W / 340) )));
+      if (!from) setX(0);
+      requestAnimationFrame(() => setX(to, ms));
+      setTimeout(() => {
+        load(page + k, { before: () => { setX(0); busy = false; } });
+      }, ms + 20);
+    }
 
-    // swipe the page horizontally (RTL: right = previous page)
-    let sx = 0, sy = 0;
-    linesEl.addEventListener('touchstart', (e) => {
-      if (e.touches.length !== 1) return;
-      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
-    }, { passive: true });
-    linesEl.addEventListener('touchend', (e) => {
-      if (!e.changedTouches.length) return;
-      const dx = e.changedTouches[0].clientX - sx;
-      const dy = e.changedTouches[0].clientY - sy;
-      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) load(page + (dx > 0 ? -1 : 1));
-    }, { passive: true });
+    prevBtn.addEventListener('click', () => turn(-1));
+    nextBtn.addEventListener('click', () => turn(1));
+
+    const frameEl = $('.m-frame');
+    let drag = null, dragged = false;
+    frameEl.addEventListener('pointerdown', (e) => {
+      if (busy || !e.isPrimary || (e.pointerType === 'mouse' && e.button !== 0)) return;
+      drag = { x: e.clientX, y: e.clientY, dx: 0, on: false, pts: [[e.timeStamp, e.clientX]] };
+      dragged = false;
+    });
+    addEventListener('pointermove', (e) => {
+      if (!drag || !e.isPrimary) return;
+      const dx = e.clientX - drag.x, dy = e.clientY - drag.y;
+      if (!drag.on) {
+        if (Math.abs(dx) < 8 && Math.abs(dy) < 8) return;
+        if (Math.abs(dy) > Math.abs(dx)) { drag = null; return; }
+        drag.on = dragged = true;
+        drag.x = e.clientX; // start from here: no jump of 8 px
+      }
+      drag.dx = e.clientX - drag.x;
+      drag.pts.push([e.timeStamp, e.clientX]);
+      if (drag.pts.length > 6) drag.pts.shift();
+      const k = drag.dx > 0 ? 1 : -1;
+      setX(has(k) ? drag.dx : drag.dx * 0.25); // no page there: it only gives a little
+    });
+    const release = (e) => {
+      if (!drag) return;
+      const d = drag; drag = null;
+      if (!d.on) return;
+      const [t0, x0] = d.pts[0];
+      const v = e && e.type === 'pointerup' && e.timeStamp > t0 ? (e.clientX - x0) / (e.timeStamp - t0) : 0; // px per ms
+      const W = track.clientWidth;
+      const k = d.dx > 0 ? 1 : -1;
+      const flick = Math.abs(v) > 0.35 && Math.sign(v) === Math.sign(d.dx);
+      if (has(k) && (Math.abs(d.dx) > W / 2 || flick)) turn(k, d.dx, v);
+      else setX(0, 220);
+    };
+    addEventListener('pointerup', release);
+    addEventListener('pointercancel', release);
+    // a drag is not a tap: no word opens, the bars don't toggle
+    frameEl.addEventListener('click', (e) => {
+      if (dragged) { e.stopPropagation(); e.preventDefault(); dragged = false; }
+    }, true);
 
     let rz;
     addEventListener('resize', () => {
       clearTimeout(rz);
-      rz = setTimeout(() => { setBarH(); fit(); }, 150);
+      rz = setTimeout(() => { setBarH(); fit(); fit(sideLines(-1)); fit(sideLines(1)); }, 150);
     });
 
     const h = parseInt(location.hash.slice(1), 10);
