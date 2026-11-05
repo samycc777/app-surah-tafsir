@@ -3,7 +3,7 @@ import '../styles/app.css';
 import Icon from '../components/Icon.astro';
 import { SITE } from '../lib.mjs';
 
-const { title, back = null, sub, nav = true } = Astro.props;
+const { title, back = null, sub, nav = true, mushaf = false } = Astro.props;
 const path = Astro.url.pathname;
 const is = (p) => (p === '/' ? path === '/' : path.startsWith(p));
 const tabs = [
@@ -19,8 +19,14 @@ const full = title ? `${title} · تفسير السعدي` : `${SITE.title} · $
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    <meta name="theme-color" content="#1f4d40" media="(prefers-color-scheme: light)" />
-    <meta name="theme-color" content="#0e1210" media="(prefers-color-scheme: dark)" />
+    {mushaf ? (
+      <meta name="theme-color" content="#070a08" />
+    ) : (
+      <>
+        <meta name="theme-color" content="#1f4d40" media="(prefers-color-scheme: light)" />
+        <meta name="theme-color" content="#0e1210" media="(prefers-color-scheme: dark)" />
+      </>
+    )}
     <meta name="description" content={`${SITE.book} – ${SITE.author}`} />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
@@ -29,9 +35,10 @@ const full = title ? `${title} · تفسير السعدي` : `${SITE.title} · $
     <meta name="apple-mobile-web-app-title" content={SITE.title} />
     <link rel="preload" href="/fonts/DroidNaskh-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/noto-kufi-arabic-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
+    {mushaf && <link rel="preload" href="/fonts/amiri-quran.woff2" as="font" type="font/woff2" crossorigin />}
     <title>{full}</title>
   </head>
-  <body>
+  <body class={mushaf ? 'mushaf-shell' : undefined}>
     <header class="bar">
       <div class="bar-in">
         {back ? (

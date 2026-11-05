@@ -1,7 +1,9 @@
 ---
 import App from '../../layouts/App.astro';
 import Icon from '../../components/Icon.astro';
-import { NAMES, ar, ayahWord, basmala, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
+import { NAMES, ar, ayahWord, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
+import MUSHAF_AYAHS from '../../data/mushaf-ayahs.json';
+import MUSHAF_SURAHS from '../../data/mushaf-surahs.json';
 
 export function getStaticPaths() {
   return Array.from({ length: 114 }, (_, i) => ({ params: { n: String(i + 1) } }));
@@ -10,70 +12,84 @@ const n = Number(Astro.params.n);
 const m = meta(n);
 const ps = passages(n);
 const vs = verses[n];
-const shownBasmala = n !== 1 && n !== 9;
 const pass = vs.map((_, i) => passageFor(ps, i + 1));
+const map = MUSHAF_AYAHS[n] ?? {};
+const range = MUSHAF_SURAHS[n] ?? { first: 1, last: 1 };
+const pages = Array.from({ length: range.last - range.first + 1 }, (_, i) => range.first + i);
+const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
 ---
-<App title={`سورة ${m.name}`} back="/" nav={true}>
-  <div class="rhead" id="rhead" data-n={n} data-name={m.name} data-count={vs.length} data-full={m.full}>
-    <h1 style="margin:0 4px 0 0;font-size:1.15rem;color:var(--brand)">{m.name}</h1>
-    <span class="chip">{m.place}</span>
-    <span class="chip">{ar(m.ayahs)} {ayahWord(m.ayahs)}</span>
-    <span class="chip">الترتيب {ar(m.seq)}</span>
-    {!m.full && <span class="chip bad">حركات التفسير غير كاملة</span>}
-  </div>
-
-  <article class="card rcard">
-    {shownBasmala && <p class="bis">{basmala}</p>}
-    <div class="ayahs" id="ayahs">
-      {vs.map((t, i) => (
-        <span class="ay" data-v={i + 1} data-p={pass[i]} id={`v${i + 1}`}>{t} <span class="vn">{ar(i + 1)}</span></span>
-      ))}
-    </div>
-  </article>
-
-  {ps.map((p, i) => (
-    <template data-pass={i} data-a={p.a} data-b={p.b}>
-      {p.p.map((t) => (
-        <p>{pieces(t).map(([x, q]) => (q ? <span class="q">{x}</span> : x))}</p>
-      ))}
-    </template>
-  ))}
-
-  <nav class="pager">
-    {n > 1 && (
-      <a class="card pcard" href={`/surah/${n - 1}/`}>
-        <span class="arrow">›</span>
-        <span class="txt"><small>السورة السابقة</small><b>{NAMES[n - 2]}</b></span>
-      </a>
-    )}
-    {n < 114 && (
-      <a class="card pcard" href={`/surah/${n + 1}/`}>
-        <span class="txt"><small>السورة التالية</small><b>{NAMES[n]}</b></span>
-        <span class="arrow">‹</span>
-      </a>
-    )}
-  </nav>
-
-  <div class="sheet-wrap" id="taf" hidden>
-    <div class="backdrop" data-close></div>
-    <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="taf-title">
-      <div class="grab"></div>
-      <header class="sheet-head">
-        <h2 id="taf-title">التفسير<span class="sub" id="taf-sub"></span></h2>
-        <button class="iconbtn" data-close aria-label="إغلاق" type="button"><Icon name="close" /></button>
+<App title={`سورة ${m.name}`} back="/" sub={`${m.name} · ${m.place}`} nav={true} mushaf={true}>
+  <section class="mushaf" id="mushaf"
+    data-n={n} data-name={m.name} data-full={m.full}
+    data-first={range.first} data-last={range.last}
+    data-pages={JSON.stringify(pages)} data-map={JSON.stringify(map)} data-passes={JSON.stringify(pass)}>
+    <div class="m-page" aria-live="polite">
+      <header class="m-head">
+        <span class="m-start" id="m-start">…</span>
+        <span class="m-page-no" id="m-page-no">…</span>
+        <span class="m-juz" id="m-juz">…</span>
       </header>
-      <div class="sheet-body">
-        <div class="ayahbox" id="taf-ayah"></div>
-        <p class="chip bad taf-note" id="taf-note" hidden>الحركات الكاملة غير متوفرة لهذه السورة بعد</p>
-        <div class="taf" id="taf-body"></div>
-      </div>
-      <footer class="sheet-foot">
-        <button class="fbtn" id="taf-prev" type="button" aria-label="الآية السابقة"><Icon name="chevron" size={16} /><span>السابق</span></button>
-        <button class="fbtn" id="taf-next" type="button" aria-label="الآية التالية"><Icon name="chevron" size={16} /><span>التالي</span></button>
-        <button class="fbtn" id="taf-bookmark" type="button" aria-pressed="false" aria-label="حفظ"><Icon name="bookmark" size={16} /><span>حفظ</span></button>
-        <button class="fbtn" id="taf-copy" type="button"><Icon name="copy" size={16} /><span>نسخ</span></button>
-        <button class="fbtn" id="taf-share" type="button"><Icon name="share" size={16} /><span>مشاركة</span></button>
-      </footer>
-    </section>
-  </div>
+      <div class="m-lines" id="m-lines"></div>
+    </div>
+
+    <nav class="m-nav" aria-label="تصفح الصفحات">
+      <button class="m-btn" id="m-prev" type="button" aria-label="الصفحة السابقة">
+        <Icon name="chevron" size={16} /><span>السابقة</span>
+      </button>
+      <span class="m-count" id="m-count"></span>
+      <button class="m-btn" id="m-next" type="button" aria-label="الصفحة التالية">
+        <span>التالية</span><Icon name="chevron" size={16} class="flip" />
+      </button>
+    </nav>
+
+    <p class="m-hint">اضغط أي كلمة من المصحف لعرض تفسيرها.</p>
+
+    <nav class="pager">
+      {n > 1 && (
+        <a class="card pcard" href={`/surah/${n - 1}/`}>
+          <span class="arrow">›</span>
+          <span class="txt"><small>السورة السابقة</small><b>{NAMES[n - 2]}</b></span>
+        </a>
+      )}
+      {n < 114 && (
+        <a class="card pcard" href={`/surah/${n + 1}/`}>
+          <span class="txt"><small>السورة التالية</small><b>{NAMES[n]}</b></span>
+          <span class="arrow">‹</span>
+        </a>
+      )}
+    </nav>
+
+    {ps.map((p, i) => (
+      <template data-pass={i} data-a={p.a} data-b={p.b}>
+        {p.p.map((t) => (
+          <p>{pieces(t).map(([x, q]) => (q ? <span class="q">{x}</span> : x))}</p>
+        ))}
+      </template>
+    ))}
+
+    <script type="application/json" id="m-ayahs" set:html={ayahJson}></script>
+
+    <div class="sheet-wrap" id="taf" hidden>
+      <div class="backdrop" data-close></div>
+      <section class="sheet" role="dialog" aria-modal="true" aria-labelledby="taf-title">
+        <div class="grab"></div>
+        <header class="sheet-head">
+          <h2 id="taf-title">التفسير<span class="sub" id="taf-sub"></span></h2>
+          <button class="iconbtn" data-close aria-label="إغلاق" type="button"><Icon name="close" /></button>
+        </header>
+        <div class="sheet-body">
+          <div class="ayahbox" id="taf-ayah"></div>
+          <p class="chip bad taf-note" id="taf-note" hidden>الحركات الكاملة غير متوفرة لهذه السورة بعد</p>
+          <div class="taf" id="taf-body"></div>
+        </div>
+        <footer class="sheet-foot">
+          <button class="fbtn" id="taf-prev" type="button" aria-label="الآية السابقة"><Icon name="chevron" size={16} /><span>السابق</span></button>
+          <button class="fbtn" id="taf-next" type="button" aria-label="الآية التالية"><Icon name="chevron" size={16} /><span>التالي</span></button>
+          <button class="fbtn" id="taf-bookmark" type="button" aria-pressed="false" aria-label="حفظ"><Icon name="bookmark" size={16} /><span>حفظ</span></button>
+          <button class="fbtn" id="taf-copy" type="button"><Icon name="copy" size={16} /><span>نسخ</span></button>
+          <button class="fbtn" id="taf-share" type="button"><Icon name="share" size={16} /><span>مشاركة</span></button>
+        </footer>
+      </section>
+    </div>
+  </section>
 </App>

@@ -45,7 +45,7 @@
       const [s, a, b] = meta.passages[id];
       const li = document.createElement('li');
       const label = `سورة ${meta.names[s - 1]} · ${a === b ? ar(a) : ar(a) + '–' + ar(b)}`;
-      li.innerHTML = `<a class="ref" href="/surah/${s}/#${a}">${label}</a><p>${snippet(byChunk[Math.floor(id / CHUNK)][id % CHUNK], words)}</p>`;
+      li.innerHTML = `<a class="ref" href="/surah/${s}/?t=1#${a}">${label}</a><p>${snippet(byChunk[Math.floor(id / CHUNK)][id % CHUNK], words)}</p>`;
       list.append(li);
     }
     shown = to;

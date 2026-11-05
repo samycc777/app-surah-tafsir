@@ -335,3 +335,125 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
 @media (prefers-reduced-motion: reduce) {
   .sheet, .sheet-wrap .backdrop, .toast { animation: none; }
 }
+
+/* ── mushaf page (dark, 15 lines) ───────────────────── */
+@font-face {
+  font-family: 'Amiri Quran';
+  src: url('/fonts/amiri-quran.woff2') format('woff2');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+html:has(body.mushaf-shell) { background: #070a08; }
+body.mushaf-shell {
+  --bg: #070a08;
+  --card: #0d120e;
+  --ink: #f2ecdc;
+  --muted: #a69d89;
+  --brand: #d8b45c;
+  --brand-2: #e3c47c;
+  --brand-solid: #4a3d1c;
+  --on-brand: #f7edd6;
+  --brand-soft: #1b1810;
+  --brand-line: #3a3220;
+  --gold: #d8b45c;
+  --gold-ink: #e3c47c;
+  --gold-soft: #221d11;
+  --gold-line: #4a3d22;
+  --bad-ink: #e3b98c;
+  --bad-soft: #2a1e12;
+  --bad-line: #4a3620;
+  --line: #252a22;
+  --line-strong: #3a4036;
+  --soft: #111611;
+  --bar: rgba(7, 10, 8, .94);
+  --tab: rgba(7, 10, 8, .97);
+  --placeholder: #7f867c;
+  --hover: #1b1f18;
+  --num-bg: #221d10;
+  --num-line: #4a3d22;
+  --switch: #3a453e;
+  --knob: #e8ede9;
+  --toast-bg: #e8ede9;
+  --toast-ink: #121815;
+  --prose: #c7d2ca;
+  --results-ink: #cfd9d2;
+  --result-mark: #463a1c;
+  --result-mark-ink: #f4e9cc;
+  --empty-icon: #6c7a72;
+  background: #070a08;
+}
+body.mushaf-shell .bar { border-bottom-color: #23261e; }
+body.mushaf-shell .brand strong { color: var(--gold); }
+body.mushaf-shell .page { padding: 8px 10px 18px; }
+body.mushaf-shell .tabbar a.on { color: var(--gold); }
+body.mushaf-shell .sheet { background: #0d120e; }
+body.mushaf-shell .ayahbox { background: #11160f; border-color: #2b2f24; color: #f2ecdc; }
+body.mushaf-shell .toast { background: #e8ede9; color: #121815; }
+
+.mushaf { max-width: 760px; margin: 0 auto; }
+.m-page {
+  background: transparent; border: 0; border-radius: 0;
+  padding: 1px 1px 2px;
+}
+.m-head {
+  display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 6px;
+  direction: rtl; border-bottom: 1px solid #26291f; padding: 1px 2px 6px;
+  font-family: var(--ui); font-size: .6rem; color: #b9a97d;
+}
+.m-start { text-align: right; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.m-juz { text-align: left; white-space: nowrap; }
+.m-page-no {
+  color: #e6c873; border: 1px solid #5a4a22; background: #171309;
+  border-radius: 8px; padding: 1px 9px; font-family: var(--ui); font-size: .68rem; font-weight: 700;
+}
+.m-lines {
+  font-family: 'Amiri Quran', 'Droid Arabic Naskh', serif;
+  font-size: clamp(1.05rem, 4.6vw, 1.4rem);
+  line-height: 2.2; color: #f5eedc; padding: 5px 5px 1px;
+}
+.m-line { display: flex; justify-content: space-between; align-items: baseline; gap: .06em; }
+.m-line.center { justify-content: center; }
+.m-line.blank { min-height: 2.2em; }
+.m-lines.sparse { font-size: clamp(1.3rem, 5.8vw, 1.75rem); }
+.m-line .w, .m-line .m-pause { white-space: nowrap; }
+.w { border-radius: .2em; cursor: pointer; transition: background .15s; }
+.w:hover, .w.on { background: rgba(216, 180, 92, .16); }
+.m-num {
+  display: inline-grid; place-items: center; flex: 0 0 auto;
+  width: 1.45em; height: 1.45em; margin: 0 .05em;
+  border: 1px solid #a17d33; background: #17130a; color: #e6c873;
+  border-radius: 50%; font-family: var(--ui); font-size: .42em; line-height: 1;
+  box-shadow: inset 0 0 0 2px #0a0d0a, inset 0 0 0 3px #5a4a22;
+  vertical-align: middle; cursor: pointer;
+}
+.m-pause { color: #c8a95c; font-size: .72em; }
+.m-band {
+  display: flex; align-items: center; justify-content: center; gap: 10px;
+  margin: 5px 0; color: #d8b45c; font-family: 'Amiri Quran', serif;
+  font-size: 1.02em; line-height: 1.6;
+}
+.m-band::before, .m-band::after {
+  content: ''; flex: 1; height: 1px;
+  background: linear-gradient(90deg, transparent, #6b5628, transparent);
+}
+.m-band span { border: 1px solid #6b5628; background: linear-gradient(180deg, #1b1e17, #10130d); border-radius: 9px; padding: 1px 26px; white-space: nowrap; }
+.m-bas {
+  text-align: center; font-family: 'Amiri Quran', serif;
+  font-size: 1.08em; color: #f5eedc; line-height: 1.7; padding: 1px 0;
+}
+.m-nav { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; margin: 8px 0 2px; }
+.m-btn {
+  display: inline-flex; align-items: center; justify-content: center; gap: 4px;
+  height: 42px; padding: 0 10px; border: 1px solid var(--line); border-radius: 12px;
+  background: var(--card); color: var(--brand); font-family: var(--ui);
+  font-size: .66rem; cursor: pointer;
+}
+.m-btn:disabled { opacity: .35; }
+#m-prev { justify-self: start; }
+#m-next { justify-self: end; }
+#m-next .icon { transform: scaleX(-1); }
+.m-count { color: var(--muted); font-family: var(--ui); font-size: .62rem; text-align: center; }
+.m-hint { text-align: center; color: var(--muted); font-family: var(--ui); font-size: .6rem; margin: 8px 0 0; }
+body.mushaf-shell .pager { margin-top: 10px; }
+body.mushaf-shell .pcard { background: var(--card); }

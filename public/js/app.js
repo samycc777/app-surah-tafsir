@@ -105,78 +105,214 @@
     return i < 0;
   };
 
-  /* ── reader ────────────────────────────────────────── */
-  const rhead = $('#rhead');
-  if (rhead) {
-    const n = +rhead.dataset.n;
-    const name = rhead.dataset.name;
-    const count = +rhead.dataset.count;
-    const full = rhead.dataset.full === 'true';
-    const ayahs = $('#ayahs');
-    const spans = $$('.ay', ayahs);
+  /* ── mushaf reader ─────────────────────────────────── */
+  const mushaf = $('#mushaf');
+  if (mushaf) {
+    const n = +mushaf.dataset.n;
+    const name = mushaf.dataset.name;
+    const full = mushaf.dataset.full === 'true';
+    const first = +mushaf.dataset.first;
+    const last = +mushaf.dataset.last;
+    const pages = JSON.parse(mushaf.dataset.pages);
+    const map = JSON.parse(mushaf.dataset.map);
+    const passes = JSON.parse(mushaf.dataset.passes);
+    const ayahs = JSON.parse($('#m-ayahs').textContent);
+    const count = ayahs.length;
     const sheet = $('#taf');
-    const body = $('#taf-body');
+    const bodyEl = $('#taf-body');
     const ayahBox = $('#taf-ayah');
     const sub = $('#taf-sub');
     const note = $('#taf-note');
     const bmBtn = $('#taf-bookmark');
-    let cur = 0;
+    const linesEl = $('#m-lines');
+    const startEl = $('#m-start');
+    const pageEl = $('#m-page-no');
+    const juzEl = $('#m-juz');
+    const countEl = $('#m-count');
+    const prevBtn = $('#m-prev');
+    const nextBtn = $('#m-next');
+    const BASMALA = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
+
+    let page = first, pageData = null, cur = 0, req = 0;
 
     const tplFor = (i) => document.querySelector(`template[data-pass="${i}"]`);
-
     const label = (a, b) => (a === b ? `الآية ${ar(a)}` : `الآيات ${ar(a)}–${ar(b)}`);
+    const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+    const remember = (v) => store.set('last', JSON.stringify({ n, v, name }));
 
-    function render(v) {
-      const span = spans[v - 1];
-      if (!span) return;
-      cur = v;
-      const t = tplFor(+span.dataset.p);
-      body.innerHTML = t ? t.innerHTML : '';
-      if (!harakat) strip(body);
-      const txt = span.childNodes[0] ? span.childNodes[0].textContent.trim() : span.textContent.trim();
-      ayahBox.textContent = `${txt} ﴿${ar(v)}﴾`;
+    const surahAyahOnPage = (d) => {
+      for (const r of d.rows) {
+        if (!r.words) continue;
+        for (const w of r.words) {
+          const s = +w.v.split(':')[0];
+          if (s === n) return +w.v.split(':')[1];
+        }
+      }
+      return null;
+    };
+
+    function renderPage(d) {
+      const rows = d.rows.map((r) => (r.words ? { words: r.words.map((w) => ({ ...w })) } : r));
+      let last = null;
+      for (const r of rows) {
+        if (r.band || r.bas) { last = null; continue; }
+        if (!r.words) continue;
+        while (r.words.length && (r.words[0].k === 'pause' || r.words[0].k === 'sajdah')) {
+          const mark = r.words.shift();
+          if (last) last.t += ` ${mark.t}`;
+        }
+        if (r.words.length) last = r.words[r.words.length - 1];
+      }
+      const textRows = rows.filter((r) => r.words && r.words.length).length;
+      linesEl.classList.toggle('sparse', textRows <= 8);
+      linesEl.innerHTML = rows.map((r) => {
+        if (r.band) return `<div class="m-band"><span>سورة ${esc(r.band.name)}</span></div>`;
+        if (r.bas) return `<div class="m-bas">${BASMALA}</div>`;
+        if (r.blank) return `<div class="m-line blank"></div>`;
+        const raw = r.words || [];
+        const ws = [];
+        for (const w of raw) {
+          if ((w.k === 'pause' || w.k === 'sajdah') && ws.length) {
+            ws[ws.length - 1].t += ` ${w.t}`;
+          } else {
+            ws.push({ t: w.t, v: w.v, k: w.k });
+          }
+        }
+        const basmala = ws.length && ws.every((w) => w.v === '1:1');
+        const center = ws.length <= 3 || basmala ? ' center' : '';
+        return `<div class="m-line${center}">` + ws.map((w) => {
+          if (w.k === 'end') {
+            return `<span class="m-num" data-v="${w.v}" role="button" tabindex="0" aria-label="الآية ${w.v.split(':')[1]}">${esc(w.t)}</span>`;
+          }
+          if (w.k === 'pause' || w.k === 'sajdah') {
+            return `<span class="m-pause" data-v="${w.v}">${esc(w.t)}</span>`;
+          }
+          return `<span class="w" data-v="${w.v}">${esc(w.t)}</span>`;
+        }).join('') + `</div>`;
+      }).join('');
+      fit();
+    }
+
+    function setHead(d) {
+      const a = d.s, b = d.e;
+      startEl.textContent = a.n === b.n
+        ? `${a.name} ${ar(a.a)}–${ar(b.a)}`
+        : `${a.name} ${ar(a.a)} · ${b.name} ${ar(b.a)}`;
+      pageEl.textContent = ar(d.p);
+      juzEl.textContent = d.juz ? `الجزء ${ar(d.juz)}` : '';
+      const i = pages.indexOf(d.p);
+      countEl.textContent = `الصفحة ${ar((i < 0 ? 0 : i) + 1)} من ${ar(pages.length)}`;
+      prevBtn.disabled = d.p <= first;
+      nextBtn.disabled = d.p >= last;
+    }
+
+    function fit() {
+      linesEl.style.fontSize = '';
+      let size = parseFloat(getComputedStyle(linesEl).fontSize);
+      for (let i = 0; i < 30; i++) {
+        const over = [...linesEl.querySelectorAll('.m-line')].some((l) => l.scrollWidth > l.clientWidth + 1);
+        if (!over || size < 11) break;
+        size -= 0.4;
+        linesEl.style.fontSize = `${size}px`;
+      }
+    }
+
+    function highlight(v) {
+      $$('.w.on, .m-num.on, .m-pause.on').forEach((e) => e.classList.remove('on'));
+      $$(`[data-v="${n}:${v}"]`, linesEl).forEach((e) => e.classList.add('on'));
+    }
+
+    function renderTaf(v) {
+      const t = tplFor(passes[v - 1]);
+      bodyEl.innerHTML = t ? t.innerHTML : '';
+      if (!harakat) strip(bodyEl);
+      ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
       sub.textContent = t ? `${name} · ${label(+t.dataset.a, +t.dataset.b)}` : name;
       note.hidden = full;
-      spans.forEach((s) => s.classList.remove('on'));
-      span.classList.add('on');
+      highlight(v);
       $('#taf-prev').disabled = v <= 1;
       $('#taf-next').disabled = v >= count;
       const on = isSaved(n, v);
       bmBtn.setAttribute('aria-pressed', String(on));
+      $('.sheet-body', sheet).scrollTop = 0;
     }
 
-    function open(v, jump = false) {
+    function showSheet(v, scroll) {
       if (v < 1 || v > count) return;
+      cur = v;
+      renderTaf(v);
       sheet.hidden = false;
       document.body.style.overflow = 'hidden';
-      render(v);
-      body.scrollTop = 0;
-      history.replaceState(null, '', `#${v}`);
-      if (jump) spans[v - 1].scrollIntoView({ block: 'center', behavior: 'smooth' });
+      history.replaceState(null, '', `${location.pathname}#${v}`);
       remember(v);
+      if (scroll) {
+        const el = $(`[data-v="${n}:${v}"]`, linesEl);
+        if (el) el.scrollIntoView({ block: 'center', behavior: 'smooth' });
+      }
     }
 
-    function close() {
+    function closeSheet() {
       sheet.hidden = true;
       document.body.style.overflow = '';
-      spans.forEach((s) => s.classList.remove('on'));
-      history.replaceState(null, '', location.pathname + location.search);
+      $$('.on').forEach((e) => e.classList.remove('on'));
+      const a = pageData ? surahAyahOnPage(pageData) : null;
+      history.replaceState(null, '', a ? `${location.pathname}#${a}` : location.pathname);
     }
 
-    const remember = (v) => store.set('last', JSON.stringify({ n, v, name }));
+    async function load(p, opts = {}) {
+      if (p < first || p > last) return;
+      const my = ++req;
+      let d;
+      try {
+        const res = await fetch(`/mushaf/pages/${p}.json`, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('page');
+        d = await res.json();
+      } catch {
+        if (my === req) toast('تعذّر تحميل الصفحة');
+        return;
+      }
+      if (my !== req) return;
+      page = p;
+      pageData = d;
+      renderPage(d);
+      setHead(d);
+      const a = surahAyahOnPage(d);
+      if (opts.hash) history.replaceState(null, '', `${location.pathname}#${opts.hash}`);
+      else if (!opts.keepHash && a) history.replaceState(null, '', `${location.pathname}#${a}`);
+      window.scrollTo({ top: 0, behavior: 'instant' });
+      if (opts.open) { showSheet(opts.open, false); }
+      else {
+        if (opts.highlight) {
+          highlight(opts.highlight);
+          const el = $(`[data-v="${n}:${opts.highlight}"]`, linesEl);
+          if (el) el.scrollIntoView({ block: 'center', behavior: 'instant' });
+        }
+        remember(opts.highlight || a || d.s.a);
+      }
+    }
 
-    ayahs.addEventListener('click', (e) => {
-      const a = e.target.closest('.ay');
-      if (a) open(+a.dataset.v);
+    function open(v, scroll) {
+      if (v < 1 || v > count) return;
+      const p = map[v];
+      if (p && p !== page) load(p, { hash: v, open: v });
+      else showSheet(v, scroll);
+    }
+
+    linesEl.addEventListener('click', (e) => {
+      const el = e.target.closest('[data-v]');
+      if (!el) return;
+      const [s, a] = el.dataset.v.split(':').map(Number);
+      if (s !== n) { location.href = `/surah/${s}/#${a}`; return; }
+      if (map[a] && map[a] !== page) load(map[a], { hash: a, open: a });
+      else showSheet(a, false);
     });
 
-    sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', close));
+    sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
     document.addEventListener('keydown', (e) => {
-      if (e.key === 'Escape' && !sheet.hidden) close();
+      if (e.key === 'Escape' && !sheet.hidden) closeSheet();
     });
-
-    $('#taf-prev').addEventListener('click', () => open(cur - 1));
-    $('#taf-next').addEventListener('click', () => open(cur + 1));
+    $('#taf-prev').addEventListener('click', () => open(cur - 1, true));
+    $('#taf-next').addEventListener('click', () => open(cur + 1, true));
 
     bmBtn.addEventListener('click', () => {
       const on = toggleSaved(n, cur, name);
@@ -185,12 +321,11 @@
     });
 
     const passageText = () => {
-      const t = tplFor(+spans[cur - 1].dataset.p);
+      const t = tplFor(passes[cur - 1]);
       const p = t ? [...t.content.querySelectorAll('p')].map((x) => x.textContent.trim()).join('\n\n') : '';
-      const txt = spans[cur - 1].childNodes[0].textContent.trim();
       return {
-        label: label(+t.dataset.a, +t.dataset.b),
-        text: `﴿${txt}﴾\n\n${p}\n\n${location.origin}/surah/${n}/#${cur}`,
+        label: t ? label(+t.dataset.a, +t.dataset.b) : '',
+        text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${location.origin}/surah/${n}/#${cur}`,
       };
     };
 
@@ -216,58 +351,39 @@
       copyText(text);
     });
 
-    window.addEventListener('harakat', () => { if (!sheet.hidden) render(cur); });
+    window.addEventListener('harakat', () => { if (!sheet.hidden) renderTaf(cur); });
 
-    // drag the sheet down to close it
-    const sheetEl = sheet.querySelector('.sheet');
-    let startY = null, dy = 0;
-    const grab = sheet.querySelector('.grab');
-    const onDown = (e) => {
-      if (e.target.closest('button')) return;
-      startY = e.clientY;
-      dy = 0;
-      sheetEl.style.transition = 'none';
-    };
-    const onMove = (e) => {
-      if (startY === null) return;
-      dy = Math.max(0, e.clientY - startY);
-      sheetEl.style.transform = `translateY(${dy}px)`;
-    };
-    const onUp = () => {
-      if (startY === null) return;
-      startY = null;
-      sheetEl.style.transition = '';
-      sheetEl.style.transform = '';
-      if (dy > 90) close();
-      dy = 0;
-    };
-    [grab, sheet.querySelector('.sheet-head')].forEach((el) => {
-      el.addEventListener('pointerdown', onDown);
-      el.addEventListener('pointermove', onMove);
-      el.addEventListener('pointerup', onUp);
-      el.addEventListener('pointercancel', onUp);
-    });
+    prevBtn.addEventListener('click', () => load(page - 1));
+    nextBtn.addEventListener('click', () => load(page + 1));
 
-    // remember the last ayah at the top of the viewport
-    let timer;
-    addEventListener('scroll', () => {
-      clearTimeout(timer);
-      timer = setTimeout(() => {
-        if (!sheet.hidden) return;
-        const y = 140;
-        const s = spans.find((x) => x.getBoundingClientRect().bottom > y);
-        if (s && window.scrollY > 60) remember(+s.dataset.v);
-      }, 600);
+    // swipe the page horizontally (RTL: right = previous page)
+    let sx = 0, sy = 0;
+    linesEl.addEventListener('touchstart', (e) => {
+      if (e.touches.length !== 1) return;
+      sx = e.touches[0].clientX; sy = e.touches[0].clientY;
     }, { passive: true });
+    linesEl.addEventListener('touchend', (e) => {
+      if (!e.changedTouches.length) return;
+      const dx = e.changedTouches[0].clientX - sx;
+      const dy = e.changedTouches[0].clientY - sy;
+      if (Math.abs(dx) > 60 && Math.abs(dx) > Math.abs(dy) * 1.5) load(page + (dx > 0 ? -1 : 1));
+    }, { passive: true });
+
+    let rz;
+    addEventListener('resize', () => {
+      clearTimeout(rz);
+      rz = setTimeout(fit, 150);
+    });
 
     if (!store.get('hint')) {
       store.set('hint', '1');
-      setTimeout(() => { if (sheet.hidden) toast('اضغط أي آية لعرض تفسيرها'); }, 1200);
+      setTimeout(() => { if (sheet.hidden) toast('اضغط أي كلمة من المصحف لعرض تفسيرها'); }, 1200);
     }
 
-    // deep link: /surah/2/#255
     const h = parseInt(location.hash.slice(1), 10);
-    if (h >= 1 && h <= count) open(h, true);
+    const wantsTafsir = new URLSearchParams(location.search).get('t') === '1';
+    if (h >= 1 && h <= count) load(map[h] || first, { hash: h, highlight: h, open: wantsTafsir ? h : 0 });
+    else load(first, { keepHash: true });
   }
 
   /* ── saved page ────────────────────────────────────── */
@@ -281,7 +397,7 @@
       }
       savedEl.innerHTML = `<div class="card results" style="overflow:hidden">${
         list.map((x) => `<div class="row" data-n="${x.n}" data-v="${x.v}">
-          <a href="/surah/${x.n}/#${x.v}" style="flex:1;min-width:0;display:block;color:inherit">
+          <a href="/surah/${x.n}/?t=1#${x.v}" style="flex:1;min-width:0;display:block;color:inherit">
             <b>${x.name} · ${ar(x.v)}</b><small>اضغط للقراءة</small>
           </a>
           <button class="iconbtn" data-del aria-label="إزالة">✕</button>
