@@ -119,7 +119,6 @@
     const ayahBox = $('#taf-ayah');
     const sub = $('#taf-sub');
     const note = $('#taf-note');
-    const bmIcon = $('#taf-bm-icon');
     const bmBtn = $('#taf-bookmark');
     let cur = 0;
 
@@ -144,7 +143,6 @@
       $('#taf-next').disabled = v >= count;
       const on = isSaved(n, v);
       bmBtn.setAttribute('aria-pressed', String(on));
-      bmIcon.textContent = on ? '★' : '☆';
     }
 
     function open(v, jump = false) {
@@ -183,7 +181,6 @@
     bmBtn.addEventListener('click', () => {
       const on = toggleSaved(n, cur, name);
       bmBtn.setAttribute('aria-pressed', String(on));
-      bmIcon.textContent = on ? '★' : '☆';
       toast(on ? 'تم الحفظ' : 'أُزيل من المحفوظات');
     });
 
@@ -279,7 +276,7 @@
     const renderSaved = () => {
       const list = savedList();
       if (!list.length) {
-        savedEl.innerHTML = `<div class="empty"><p>لا محفوظات بعد.</p><p>اضغط ☆ في نافذة التفسير لحفظ الآية.</p></div>`;
+        savedEl.innerHTML = `<div class="empty"><p>لا محفوظات بعد.</p><p>اضغط «حفظ» في نافذة التفسير لحفظ الآية.</p></div>`;
         return;
       }
       savedEl.innerHTML = `<div class="card results" style="overflow:hidden">${

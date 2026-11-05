@@ -19,6 +19,7 @@
   };
   const form = document.getElementById('sform'), input = document.getElementById('q');
   const status = document.getElementById('status'), list = document.getElementById('results'), more = document.getElementById('more');
+  const hint = document.getElementById('hint');
   let hits = [], shown = 0, words = [], run = 0;
 
   const esc = (s) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
@@ -56,6 +57,7 @@
     list.innerHTML = '';
     more.hidden = true;
     words = norm(q).split(' ').filter(Boolean);
+    if (hint) hint.hidden = words.length > 0;
     if (!words.length) { status.textContent = ''; return; }
     status.textContent = '…';
     try {
