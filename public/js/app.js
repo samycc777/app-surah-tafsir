@@ -78,17 +78,41 @@
     deferred = null;
   });
 
-  /* ── home: continue reading ────────────────────────── */
+  /* ── theme (☾) ────────────────────────────────────── */
+  const setTheme = (t) => {
+    document.documentElement.dataset.theme = t;
+    const m = $('#theme-color');
+    if (m) m.content = t === 'dark' ? '#1d1a15' : '#ffffff';
+    store.set('theme', t);
+  };
+  $('#theme-toggle')?.addEventListener('click', () => {
+    setTheme(document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark');
+  });
+
+  /* ── home: recently read + tabs ────────────────────── */
   const resume = $('#resume');
   if (resume) {
     try {
       const last = JSON.parse(store.get('last') || 'null');
       if (last && last.n >= 1 && last.n <= 114) {
-        resume.hidden = false;
+        $('#resume-wrap').hidden = false;
         resume.href = `/surah/${last.n}/#${last.v}`;
-        resume.querySelector('small').textContent = `سورة ${last.name} · الآية ${ar(last.v)}`;
+        $('.bn', resume).textContent = ar(last.n);
+        $('.sname', resume).textContent = `سورة ${last.name}`;
+        $('.smeta', resume).textContent = `الآية ${ar(last.v)}`;
       }
     } catch { /* ignore */ }
+  }
+  const tabs = $$('.tab[data-tab]');
+  if (tabs.length) {
+    const show = (k) => {
+      tabs.forEach((b) => { const on = b.dataset.tab === k; b.classList.toggle('on', on); b.setAttribute('aria-selected', String(on)); });
+      $('#tab-s').hidden = k !== 's';
+      $('#tab-j').hidden = k !== 'j';
+      store.set('tab', k);
+    };
+    tabs.forEach((b) => b.addEventListener('click', () => show(b.dataset.tab)));
+    if (store.get('tab') === 'j') show('j');
   }
 
   /* ── bookmarks ─────────────────────────────────────── */
@@ -166,7 +190,7 @@
       const textRows = rows.filter((r) => r.words && r.words.length).length;
       linesEl.classList.toggle('sparse', textRows <= 8);
       linesEl.innerHTML = rows.map((r) => {
-        if (r.band) return `<div class="m-band"><span>سورة ${esc(r.band.name)}</span></div>`;
+        if (r.band) return `<div class="m-band"><span><b>سورة ${esc(r.band.name)}</b></span></div>`;
         if (r.bas) return `<div class="m-bas">${BASMALA}</div>`;
         if (r.blank) return `<div class="m-line blank"></div>`;
         const raw = r.words || [];
@@ -276,6 +300,7 @@
       pageData = d;
       renderPage(d);
       setHead(d);
+      window.dispatchEvent(new Event('pageshown'));
       const a = surahAyahOnPage(d);
       if (opts.hash) history.replaceState(null, '', `${location.pathname}#${opts.hash}`);
       else if (!opts.keepHash && a) history.replaceState(null, '', `${location.pathname}#${a}`);
@@ -352,6 +377,27 @@
     });
 
     window.addEventListener('harakat', () => { if (!sheet.hidden) renderTaf(cur); });
+
+    /* reader tools: page mark, share, help, fullscreen */
+    const markBtn = $('#r-mark');
+    const pageAyah = () => (pageData && surahAyahOnPage(pageData)) || 1;
+    const syncMark = () => markBtn?.setAttribute('aria-pressed', String(isSaved(n, pageAyah())));
+    markBtn?.addEventListener('click', () => {
+      const on = toggleSaved(n, pageAyah(), name);
+      syncMark();
+      toast(on ? 'تم الحفظ في المحفوظات' : 'أُزيل من المحفوظات');
+    });
+    $('#r-share')?.addEventListener('click', async () => {
+      const url = `${location.origin}/surah/${n}/#${pageAyah()}`;
+      if (navigator.share) { try { await navigator.share({ title: `سورة ${name}`, url }); } catch { /* cancelled */ } return; }
+      copyText(url);
+    });
+    $('#r-help')?.addEventListener('click', () => toast('اضغط أي كلمة لعرض تفسيرها، واسحب الصفحة للتنقل'));
+    $('#r-full')?.addEventListener('click', () => {
+      if (document.fullscreenElement) document.exitFullscreen?.();
+      else document.documentElement.requestFullscreen?.().catch(() => toast('ملء الشاشة غير متاح'));
+    });
+    window.addEventListener('pageshown', syncMark);
 
     prevBtn.addEventListener('click', () => load(page - 1));
     nextBtn.addEventListener('click', () => load(page + 1));

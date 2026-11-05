@@ -59,3 +59,25 @@ export function passageFor(ps, v) {
   }
   return found;
 }
+
+// Juz → { j, first, last, parts: [{ n, name, a, b }] } from the 604 page files (every juz starts a page).
+export const JUZ = (() => {
+  const out = [];
+  for (let p = 1; p <= 604; p++) {
+    const d = JSON.parse(readFileSync(`public/mushaf/pages/${p}.json`, 'utf8'));
+    const j = out[out.length - 1];
+    if (!j || j.j !== d.juz) out.push({ j: d.juz, first: p, last: p, s: d.s, e: d.e });
+    else { j.last = p; j.e = d.e; }
+  }
+  for (const j of out) {
+    j.parts = [];
+    for (let n = j.s.n; n <= j.e.n; n++) {
+      j.parts.push({
+        n, name: META[n - 1].name,
+        a: n === j.s.n ? j.s.a : 1,
+        b: n === j.e.n ? j.e.a : META[n - 1].ayahs,
+      });
+    }
+  }
+  return out;
+})();

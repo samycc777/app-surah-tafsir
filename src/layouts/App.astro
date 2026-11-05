@@ -3,70 +3,51 @@ import '../styles/app.css';
 import Icon from '../components/Icon.astro';
 import { SITE } from '../lib.mjs';
 
-const { title, back = null, sub, nav = true, mushaf = false } = Astro.props;
+const { title, mushaf = false } = Astro.props;
 const path = Astro.url.pathname;
 const is = (p) => (p === '/' ? path === '/' : path.startsWith(p));
-const tabs = [
-  ['/', 'السور', 'book'],
-  ['/search/', 'البحث', 'search'],
-  ['/saved/', 'المحفوظات', 'bookmark'],
-];
 const full = title ? `${title} · تفسير السعدي` : `${SITE.title} · ${SITE.sub}`;
 ---
 <!doctype html>
-<html lang="ar" dir="rtl">
+<html lang="ar" dir="rtl" data-theme="light">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
     <meta name="color-scheme" content="light dark" />
-    {mushaf ? (
-      <meta name="theme-color" content="#070a08" />
-    ) : (
-      <>
-        <meta name="theme-color" content="#1f4d40" media="(prefers-color-scheme: light)" />
-        <meta name="theme-color" content="#0e1210" media="(prefers-color-scheme: dark)" />
-      </>
-    )}
+    <meta name="theme-color" content="#ffffff" id="theme-color" />
+    <script is:inline>
+      try {
+        if (localStorage.getItem('surah:theme') === 'dark') {
+          document.documentElement.dataset.theme = 'dark';
+          document.getElementById('theme-color').content = '#1d1a15';
+        }
+      } catch {}
+    </script>
     <meta name="description" content={`${SITE.book} – ${SITE.author}`} />
     <link rel="icon" href="/icons/icon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="/icons/icon-192.png" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-title" content={SITE.title} />
-    <link rel="preload" href="/fonts/DroidNaskh-Regular.woff2" as="font" type="font/woff2" crossorigin />
     <link rel="preload" href="/fonts/noto-kufi-arabic-arabic-400-normal.woff2" as="font" type="font/woff2" crossorigin />
-    {mushaf && <link rel="preload" href="/fonts/amiri-quran.woff2" as="font" type="font/woff2" crossorigin />}
+    <link rel="preload" href="/fonts/amiri-quran.woff2" as="font" type="font/woff2" crossorigin />
     <title>{full}</title>
   </head>
   <body class={mushaf ? 'mushaf-shell' : undefined}>
     <header class="bar">
       <div class="bar-in">
-        {back ? (
-          <a class="iconbtn" href={back} aria-label="رجوع"><Icon name="back" /></a>
-        ) : (
-          <span class="iconbtn ghost" aria-hidden="true"></span>
-        )}
-        <a class="brand" href="/">
-          <strong>{SITE.title}</strong>
-          <small>{sub ?? SITE.sub}</small>
+        <a class="logo" href="/" aria-label="الرئيسية">
+          <span>{SITE.title}</span>
         </a>
-        <button class="iconbtn" id="open-settings" aria-label="الإعدادات" type="button">
-          <Icon name="settings" />
-        </button>
+        <span class="bar-gap"></span>
+        <button class="iconbtn" id="theme-toggle" type="button" aria-label="الوضع الليلي"><Icon name="moon" /></button>
+        <a class={`iconbtn${is('/saved/') ? ' on' : ''}`} href="/saved/" aria-label="المحفوظات"><Icon name="bookmark" /></a>
+        <a class={`iconbtn${is('/search/') ? ' on' : ''}`} href="/search/" aria-label="البحث"><Icon name="search" /></a>
+        <button class="iconbtn" id="open-settings" aria-label="القائمة" type="button"><Icon name="menu" /></button>
       </div>
     </header>
 
     <main class="page"><slot /></main>
-
-    {nav && (
-      <nav class="tabbar" aria-label="التنقل">
-        {tabs.map(([href, label, icon]) => (
-          <a href={href} class={is(href) ? 'on' : undefined}>
-            <Icon name={icon} /><span>{label}</span>
-          </a>
-        ))}
-      </nav>
-    )}
 
     <div class="sheet-wrap" id="settings" hidden>
       <div class="backdrop" data-close></div>

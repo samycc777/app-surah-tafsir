@@ -1,33 +1,70 @@
 ---
 import App from '../layouts/App.astro';
 import Icon from '../components/Icon.astro';
-import { META, ar, ayahWord } from '../lib.mjs';
-const full = META.filter((m) => m.full).length;
+import { META, JUZ, ar, ayahWord } from '../lib.mjs';
 ---
 <App>
-  <form class="card searchbar" action="/search/" method="get" role="search">
-    <input type="search" name="q" placeholder="ابحث في التفسير…" aria-label="بحث في التفسير" />
-    <button type="submit" aria-label="بحث"><Icon name="search" size={20} /></button>
-  </form>
+  <svg width="0" height="0" style="position:absolute" aria-hidden="true">
+    <symbol id="orn" viewBox="0 0 60 60">
+      <rect x="11" y="11" width="38" height="38" rx="3" style="fill:var(--orn-fill);stroke:var(--orn-line);stroke-width:1.4" />
+      <rect x="11" y="11" width="38" height="38" rx="3" style="fill:var(--orn-fill);stroke:var(--orn-line);stroke-width:1.4" transform="rotate(45 30 30)" />
+      <circle cx="30" cy="30" r="14.5" style="fill:var(--orn-fill);stroke:var(--orn-line);stroke-width:1.1" />
+      <circle cx="30" cy="3.5" r="1.6" style="fill:var(--orn-line)" /><circle cx="30" cy="56.5" r="1.6" style="fill:var(--orn-line)" />
+      <circle cx="3.5" cy="30" r="1.6" style="fill:var(--orn-line)" /><circle cx="56.5" cy="30" r="1.6" style="fill:var(--orn-line)" />
+    </symbol>
+  </svg>
 
-  <a class="resume" id="resume" href="/" hidden>
-    <Icon name="book" size={22} />
-    <span class="txt"><b>تابع القراءة</b><small></small></span>
-    <Icon name="chevron" size={18} />
-  </a>
+  <section class="hero">
+    <form class="pill" action="/search/" method="get" role="search">
+      <Icon name="search" size={22} />
+      <input type="search" name="q" placeholder="البحث في التفسير" aria-label="البحث في التفسير" />
+    </form>
+  </section>
 
-  <p class="section-title">السور · {ar(114)}</p>
-  <div class="sgrid">
+  <section class="recent" id="resume-wrap" hidden>
+    <h2 class="h-ico"><Icon name="clock" size={22} /><span>قُرئ مؤخراً</span></h2>
+    <a class="scard" id="resume" href="/">
+      <span class="badge"><svg viewBox="0 0 60 60"><use href="#orn" /></svg><b class="bn"></b></span>
+      <span class="txt"><span class="sname"></span><span class="smeta"></span></span>
+      <Icon name="arrow" size={22} class="go" />
+    </a>
+  </section>
+
+  <div class="tabs" role="tablist">
+    <button type="button" role="tab" class="tab on" data-tab="s" aria-selected="true">السور</button>
+    <button type="button" role="tab" class="tab" data-tab="j" aria-selected="false">الأجزاء</button>
+  </div>
+
+  <div class="list" id="tab-s">
     {META.map((m) => (
-      <a class="card scard" href={`/surah/${m.n}/`}>
-        <span class="sno">{ar(m.n)}</span>
+      <a class="scard" href={`/surah/${m.n}/`}>
+        <span class="badge"><svg viewBox="0 0 60 60"><use href="#orn" /></svg><b class="bn">{ar(m.n)}</b></span>
         <span class="txt">
-          <span class="sname">{m.name}</span>
-          <span class="smeta">{m.place} · {ar(m.ayahs)} {ayahWord(m.ayahs)}{m.full && <i class="dot" title="حركات كاملة"></i>}</span>
+          <span class="sname">سورة {m.name}</span>
+          <span class="smeta">{m.place} · {ar(m.ayahs)} {ayahWord(m.ayahs)}</span>
         </span>
+        <Icon name="arrow" size={22} class="go" />
       </a>
     ))}
   </div>
 
-  <p class="note">الحركات الكاملة في {ar(full)} سورة من {ar(114)}.</p>
+  <div class="list" id="tab-j" hidden>
+    {JUZ.map((j) => (
+      <>
+        <a class="juz-pill" href={`/surah/${j.parts[0].n}/#${j.parts[0].a}`}>
+          <b>الجزء {ar(j.j)}</b><span>(من صفحة {ar(j.first)} إلى {ar(j.last)})</span>
+        </a>
+        {j.parts.map((p) => (
+          <a class="scard" href={`/surah/${p.n}/#${p.a}`}>
+            <span class="badge"><svg viewBox="0 0 60 60"><use href="#orn" /></svg><b class="bn">{ar(p.n)}</b></span>
+            <span class="txt">
+              <span class="sname">سورة {p.name}</span>
+              <span class="smeta">من آية {ar(p.a)} إلى {ar(p.b)}</span>
+            </span>
+            <Icon name="arrow" size={22} class="go" />
+          </a>
+        ))}
+      </>
+    ))}
+  </div>
 </App>

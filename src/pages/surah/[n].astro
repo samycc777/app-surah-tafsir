@@ -18,18 +18,32 @@ const range = MUSHAF_SURAHS[n] ?? { first: 1, last: 1 };
 const pages = Array.from({ length: range.last - range.first + 1 }, (_, i) => range.first + i);
 const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
 ---
-<App title={`سورة ${m.name}`} back="/" sub={`${m.name} · ${m.place}`} nav={true} mushaf={true}>
+<App title={`سورة ${m.name}`} mushaf={true}>
   <section class="mushaf" id="mushaf"
     data-n={n} data-name={m.name} data-full={m.full}
     data-first={range.first} data-last={range.last}
     data-pages={JSON.stringify(pages)} data-map={JSON.stringify(map)} data-passes={JSON.stringify(pass)}>
-    <div class="m-page" aria-live="polite">
-      <header class="m-head">
-        <span class="m-start" id="m-start">…</span>
-        <span class="m-page-no" id="m-page-no">…</span>
-        <span class="m-juz" id="m-juz">…</span>
-      </header>
-      <div class="m-lines" id="m-lines"></div>
+    <div class="r-tools">
+      <button class="iconbtn" id="r-mark" type="button" aria-pressed="false" aria-label="علامة على هذه الصفحة"><Icon name="bookmark" /></button>
+      <button class="iconbtn" id="r-share" type="button" aria-label="مشاركة"><Icon name="share" /></button>
+      <button class="iconbtn" id="r-help" type="button" aria-label="مساعدة"><Icon name="help" /></button>
+      <button class="iconbtn" id="r-full" type="button" aria-label="ملء الشاشة"><Icon name="expand" /></button>
+    </div>
+    <nav class="r-nav" aria-label="السور">
+      {n > 1 ? <a href={`/surah/${n - 1}/`}><Icon name="chevron" size={16} />{NAMES[n - 2]}</a> : <span></span>}
+      <span class="r-info">{m.place} · {ar(m.ayahs)} {ayahWord(m.ayahs)}</span>
+      {n < 114 ? <a href={`/surah/${n + 1}/`}>{NAMES[n]}<Icon name="chevron" size={16} class="flip" /></a> : <span></span>}
+    </nav>
+
+    <div class="m-frame">
+      <div class="m-page" aria-live="polite">
+        <header class="m-head">
+          <span class="m-start" id="m-start">…</span>
+          <span class="m-juz" id="m-juz">…</span>
+        </header>
+        <div class="m-lines" id="m-lines"></div>
+        <footer class="m-foot"><span class="m-page-no" id="m-page-no">…</span></footer>
+      </div>
     </div>
 
     <nav class="m-nav" aria-label="تصفح الصفحات">
@@ -40,23 +54,6 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
       <button class="m-btn" id="m-next" type="button" aria-label="الصفحة التالية">
         <span>التالية</span><Icon name="chevron" size={16} class="flip" />
       </button>
-    </nav>
-
-    <p class="m-hint">اضغط أي كلمة من المصحف لعرض تفسيرها.</p>
-
-    <nav class="pager">
-      {n > 1 && (
-        <a class="card pcard" href={`/surah/${n - 1}/`}>
-          <span class="arrow">›</span>
-          <span class="txt"><small>السورة السابقة</small><b>{NAMES[n - 2]}</b></span>
-        </a>
-      )}
-      {n < 114 && (
-        <a class="card pcard" href={`/surah/${n + 1}/`}>
-          <span class="txt"><small>السورة التالية</small><b>{NAMES[n]}</b></span>
-          <span class="arrow">‹</span>
-        </a>
-      )}
     </nav>
 
     {ps.map((p, i) => (
