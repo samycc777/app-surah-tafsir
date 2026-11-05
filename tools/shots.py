@@ -23,31 +23,43 @@ def main():
         page.goto(f"{BASE}/", wait_until="networkidle")
         page.screenshot(path=f"{OUT}/home.png")
 
-        # surah 1 (partial harakat) — open the tafsir sheet
+        # surah 1 — the mushaf page and its tafsir sheet
         page.goto(f"{BASE}/surah/1/", wait_until="networkidle")
+        page.wait_for_selector(".m-line", timeout=15000)
         page.screenshot(path=f"{OUT}/surah1.png")
-        page.click('.ay[data-v="2"]')
-        page.wait_for_timeout(400)
+        page.click('.m-line .w[data-v="1:2"]')
+        page.wait_for_timeout(500)
         page.screenshot(path=f"{OUT}/sheet1.png")
         print("sheet title:", page.inner_text("#taf-sub"))
         print("note visible:", page.is_visible("#taf-note"))
 
-        # surah 40 (fully vocalised) — no note
+        # surah 2 — a full 15-line page (Baqarah 1–5 starts page 2)
+        page.goto(f"{BASE}/surah/2/", wait_until="networkidle")
+        page.wait_for_selector(".m-line", timeout=15000)
+        page.screenshot(path=f"{OUT}/surah2.png")
+        print("s2 head:", page.inner_text("#m-start"), "| page", page.inner_text("#m-page-no"))
+
+        # surah 40 — fully vocalised, no note; save the first ayah
         page.goto(f"{BASE}/surah/40/", wait_until="networkidle")
-        page.click('.ay[data-v="1"]')
-        page.wait_for_timeout(400)
+        page.wait_for_selector(".m-line", timeout=15000)
+        page.click('.m-line .w[data-v="40:1"]')
+        page.wait_for_timeout(500)
         page.screenshot(path=f"{OUT}/sheet40.png")
         print("40 note visible:", page.is_visible("#taf-note"))
+        page.click("#taf-bookmark")
+        page.wait_for_timeout(300)
 
         # harakat off
-        page.keyboard.press("Escape")
-        page.wait_for_timeout(300)
+        page.click("#taf .sheet-head [data-close]")
+        page.wait_for_timeout(200)
         page.click("#open-settings")
         page.wait_for_timeout(300)
         page.screenshot(path=f"{OUT}/settings.png")
         page.click("#set-harakat")
         page.wait_for_timeout(300)
         page.screenshot(path=f"{OUT}/settings-off.png")
+        page.click("#settings [data-close]")
+        page.wait_for_timeout(200)
 
         # search
         page.goto(f"{BASE}/search/?q=الرحمن", wait_until="networkidle")
@@ -56,12 +68,18 @@ def main():
         print("search status:", page.inner_text("#status"))
 
         # saved (bookmark flow)
-        page.goto(f"{BASE}/surah/40/", wait_until="networkidle")
-        page.click('.ay[data-v="2"]')
-        page.wait_for_timeout(300)
-        page.click("#taf-bookmark")
         page.goto(f"{BASE}/saved/", wait_until="networkidle")
         page.screenshot(path=f"{OUT}/saved.png")
+
+        # desktop
+        dctx = b.new_context(
+            viewport={"width": 1280, "height": 900}, device_scale_factor=1,
+            locale="ar", timezone_id="Africa/Cairo",
+        )
+        dpage = dctx.new_page()
+        dpage.on("console", lambda m: errors.append(f"desktop console {m.type}: {m.text}") if m.type == "error" else None)
+        dpage.goto(f"{BASE}/", wait_until="networkidle")
+        dpage.screenshot(path=f"{OUT}/desktop.png")
 
         print("ERRORS:", errors or "none")
         b.close()
