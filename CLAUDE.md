@@ -13,6 +13,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
 - `tools/`: `make_meta.py` (meta + harakat audit), `export_tafsir.py` (APK DB → JSONL), `shots.py` (smoke test).
+- `docs/notes/`: RE report, artifact inventory (raw APK/DB are git-ignored, in the main folder only), UI screenshots.
 
 ## Commands
 - `npm ci`, `npm run dev`, `npm run build`, `npm run check`.

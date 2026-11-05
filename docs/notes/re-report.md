@@ -200,4 +200,5 @@ print; the digital feeds used here are plain-text, which is why they look bare.)
 - `db/assets/flutter_assets/database/surah_database_app_v34.db` — the SQLite corpus.
 
 All observations above are static (shipped artifact). No runtime capture was taken; the
-device was not attached during analysis.
+device was not attached during analysis. Which files are committed and which live only on
+disk: [re-artifacts.md](re-artifacts.md).
