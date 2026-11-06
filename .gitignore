@@ -5,7 +5,7 @@ extracted/
 extracted-arm/
 work/
 pylibs/
-node_modules/
+node_modules
 *.log
 data/tafsir-json/
 dist/
