@@ -141,16 +141,15 @@
   /* ── mushaf reader ─────────────────────────────────── */
   const mushaf = $('#mushaf');
   if (mushaf) {
-    const n = +mushaf.dataset.n;
-    const name = mushaf.dataset.name;
-    const full = mushaf.dataset.full === 'true';
-    const first = +mushaf.dataset.first;
-    const last = +mushaf.dataset.last;
-    const pages = JSON.parse(mushaf.dataset.pages);
-    const map = JSON.parse(mushaf.dataset.map);
-    const passes = JSON.parse(mushaf.dataset.passes);
-    const ayahs = JSON.parse($('#m-ayahs').textContent);
-    const count = ayahs.length;
+    // the surah's data; swapped in place when the reader moves on into another surah (switchTo)
+    let n, name, full, first, last, pages, map, passes, ayahs, count;
+    const readSurah = () => {
+      const D = mushaf.dataset;
+      n = +D.n; name = D.name; full = D.full === 'true'; first = +D.first; last = +D.last;
+      pages = JSON.parse(D.pages); map = JSON.parse(D.map); passes = JSON.parse(D.passes);
+      ayahs = JSON.parse($('#m-ayahs').textContent); count = ayahs.length;
+    };
+    readSurah();
     const sheet = $('#taf');
     const bodyEl = $('#taf-body');
     const ayahBox = $('#taf-ayah');
@@ -468,7 +467,10 @@
       const el = e.target.closest('[data-v]');
       if (!el) return;
       const [s, a] = el.dataset.v.split(':').map(Number);
-      if (s !== n) { location.href = `/surah/${s}/#${a}`; return; }
+      if (s !== n) { // a word of the other surah on a shared page
+        switchTo(s).then(() => load(map[a] || page, { hash: a, open: a }), () => { location.href = `/surah/${s}/#${a}`; });
+        return;
+      }
       if (map[a] && map[a] !== page) load(map[a], { hash: a, open: a });
       else showSheet(a, false);
     });
@@ -584,13 +586,40 @@
       track.style.transform = x ? `translate3d(${x}px,0,0)` : '';
     };
     const has = (k) => inBook(page + k);
-    /* a page outside this surah: open the surah it belongs to on that page (the next surah's first
-       page going forward, the previous surah's last going back). replace(): back still leaves the reader. */
+    /* Another surah without reloading (a reload makes the screen blink): its page HTML is fetched
+       (pre-cached) and its data, Saadi templates and nav are swapped into this page. */
+    const surahDocs = {};
+    async function switchTo(s) {
+      surahDocs[s] ||= fetch(`/surah/${s}/`).then((r) => { if (!r.ok) throw new Error('surah'); return r.text(); })
+        .catch((e) => { delete surahDocs[s]; throw e; });
+      const doc = new DOMParser().parseFromString(await surahDocs[s], 'text/html');
+      const m = doc.getElementById('mushaf');
+      if (!m) throw new Error('surah');
+      for (const k of ['n', 'name', 'full', 'first', 'last', 'pages', 'map', 'passes']) mushaf.dataset[k] = m.dataset[k];
+      const ayahEl = $('#m-ayahs');
+      $$('template[data-pass]', mushaf).forEach((t) => t.remove());
+      $$('template[data-pass]', m).forEach((t) => ayahEl.before(document.importNode(t, true)));
+      ayahEl.textContent = doc.getElementById('m-ayahs').textContent;
+      const nav = $('.r-nav'), nav2 = doc.querySelector('.r-nav');
+      if (nav && nav2) nav.innerHTML = nav2.innerHTML;
+      document.title = doc.title;
+      readSurah();
+      for (const k in extra) delete extra[k];
+      history.replaceState(null, '', `/surah/${s}/`); // replace: back still leaves the reader
+    }
+    // the next surah's first page going forward, the previous surah's last going back
     async function cross(p, done) {
+      let s;
       try {
         const d = await getPage(p);
-        location.replace(`/surah/${p > last ? d.s.n : d.e.n}/?p=${p}`);
-      } catch { done(); toast('تعذّر تحميل الصفحة'); }
+        s = p > last ? d.s.n : d.e.n;
+        await switchTo(s);
+      } catch {
+        if (s) location.replace(`/surah/${s}/?p=${p}`);
+        else { done(); toast('تعذّر تحميل الصفحة'); }
+        return;
+      }
+      load(p, { before: done });
     }
     // coming back from the page cache after a cross: the track is still slid over
     addEventListener('pageshow', (e) => { if (e.persisted) { setX(0); busy = false; } });
