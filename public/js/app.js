@@ -167,6 +167,8 @@
     const BASMALA = 'بِسْمِ ٱللَّهِ ٱلرَّحْمَـٰنِ ٱلرَّحِيمِ';
 
     let page = first, pageData = null, cur = 0, req = 0;
+    const BOOK = 604; // pages in the mushaf: swiping past this surah's pages goes on into the next one
+    const inBook = (p) => p >= 1 && p <= BOOK;
 
     /* King Fahd Complex QCF page fonts: page p's words are glyphs `g` of the font /qcf/p<p>.woff2.
        If a font can't load (offline, not cached yet) the page falls back to Amiri text `t`. */
@@ -303,8 +305,8 @@
       headInto(curPanel, d);
       const i = pages.indexOf(d.p);
       countEl.textContent = `الصفحة ${ar((i < 0 ? 0 : i) + 1)} من ${ar(pages.length)}`;
-      prevBtn.disabled = d.p <= first;
-      nextBtn.disabled = d.p >= last;
+      prevBtn.disabled = d.p <= 1;
+      nextBtn.disabled = d.p >= BOOK;
     }
 
     /* One font size for the whole page, as large as the screen allows: the widest line fills the
@@ -411,7 +413,7 @@
     async function drawSide(k, p) {
       const L = sideLines(k);
       side[k].dataset.p = p;
-      if (p < first || p > last) {
+      if (!inBook(p)) {
         L.innerHTML = '';
         side[k].querySelectorAll('.m-head span').forEach((e) => { e.textContent = ''; });
         return;
@@ -581,7 +583,17 @@
       track.style.transition = ms ? `transform ${ms}ms cubic-bezier(.2,.75,.25,1)` : 'none';
       track.style.transform = x ? `translate3d(${x}px,0,0)` : '';
     };
-    const has = (k) => page + k >= first && page + k <= last;
+    const has = (k) => inBook(page + k);
+    /* a page outside this surah: open the surah it belongs to on that page (the next surah's first
+       page going forward, the previous surah's last going back). replace(): back still leaves the reader. */
+    async function cross(p, done) {
+      try {
+        const d = await getPage(p);
+        location.replace(`/surah/${p > last ? d.s.n : d.e.n}/?p=${p}`);
+      } catch { done(); toast('تعذّر تحميل الصفحة'); }
+    }
+    // coming back from the page cache after a cross: the track is still slid over
+    addEventListener('pageshow', (e) => { if (e.persisted) { setX(0); busy = false; } });
     function turn(k, from = 0, v = 0) {
       if (busy) return;
       const W = track.clientWidth;
@@ -593,7 +605,9 @@
       if (!from) setX(0);
       requestAnimationFrame(() => setX(to, ms));
       setTimeout(() => {
-        load(page + k, { before: () => { setX(0); busy = false; } });
+        const done = () => { setX(0); busy = false; };
+        if (page + k < first || page + k > last) cross(page + k, done);
+        else load(page + k, { before: done });
       }, ms + 20);
     }
 
@@ -649,7 +663,9 @@
 
     const h = parseInt(location.hash.slice(1), 10);
     const wantsTafsir = new URLSearchParams(location.search).get('t') === '1';
+    const atPage = +new URLSearchParams(location.search).get('p');
     if (h >= 1 && h <= count) load(map[h] || first, { hash: h, highlight: h, open: wantsTafsir ? h : 0 });
+    else if (atPage >= first && atPage <= last) load(atPage);
     else load(first, { keepHash: true });
   }
 
