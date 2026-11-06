@@ -54,3 +54,4 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - Inside the app `location.origin` is `appassets.androidplatform.net` → share links use `ORIGIN` (the public site); no service worker there.
 - Android's packager drops asset folders starting with `_` (Astro's default `_astro`) → the app showed unstyled pages; keep `build.assets: 'assets'`.
 - `public/mushaf/pages` is ~5 MB and pre-cached by the SW; don't fetch all pages in the page HTML — the reader loads one JSON.
+- Bilal reads in the phone app, not the site → after every deploy wait for the new `app-vN` release and `adb install -r` it, or he still sees the old version.
