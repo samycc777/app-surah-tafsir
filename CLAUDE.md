@@ -10,7 +10,7 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 - `src/lib.mjs`: `ar()`, `ayahWord()`, `verses`, `passages()`, `passageFor()`, `JUZ` (from the page files). Reads data by cwd
   path (`src/data/...`), never `import.meta.url` — Astro's prerender bundling breaks that.
 - `src/data/`: Tanzil text, `tafsir/<n>.json` passages, `meta.json` (generated), `mushaf-ayahs.json` (ayah→page) and `mushaf-surahs.json` (page ranges).
-- `public/tafsir/{muyassar,mukhtasar}/<n>.json`: `[{a,b,t}]` passages, fetched by the sheet; made by `tools/export_extra_tafsir.py` from the git-ignored `data/tafsir-json/*.jsonl`. Saʿdī stays in the page as `<template>`s.
+- `public/tafsir/{muyassar,mukhtasar}/<n>.json`: `[{a,b,t}]` passages, fetched by the sheet; made by `tools/export_extra_tafsir.py` from the git-ignored `data/tafsir-json/*.jsonl` (Mukhtasar text: media-harakat-books' vowelled `out/`, keeping the APK's `_word_` highlights). Saʿdī stays in the page as `<template>`s.
 - `public/mushaf/pages/<1..604>.json`: API-generated 15-line page data (words, surah bands, juz); fetched by the reader and pre-cached.
 - `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. Page turns slide in `#m-track`: the current `.m-page` plus two `.ghost` neighbours drawn in advance (next on the left, RTL book order); the tafsir sheet's ayah is drawn with the QCF page fonts (`ayahQcf`). `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
@@ -28,8 +28,10 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
   Install on the phone: `gh release download -R samycc777/app-surah-tafsir -p '*.apk' -D <dir>` then `adb install -r`. Signing key: `~/Backups/surah-signing-key/` (also in Actions secrets).
 
 ## Conventions
-- Harakat are never invented or removed from the data: surahs 40–114 are fully vocalised, 1–39 are
-  not; `meta.json.full` drives the notice. Re-run `tools/make_meta.py` after any tafsir data change.
+- Bilal wants every tafsir fully vowelled. The app never invents or removes harakat: al-Mukhtasar comes fully
+  vowelled from `~/dev/media-harakat-books/books/mukhtasar-tafsir` (proved to add marks only); Saʿdī: surahs 40–114
+  are fully vocalised, 1–39 not yet (`meta.json.full` drives the notice); Muyassar is as printed. Re-run
+  `tools/make_meta.py` after any tafsir data change.
 - Arabic UI only; no editorial text beyond UI words and the About page.
 - Look follows web.surahapp.com/ar: cream and gold, star badges, framed mushaf page; all drawn in our own CSS/SVG, never their images or fonts. Theme is `html[data-theme]` (saved as `surah:theme`), not the system setting.
 - The mushaf layout, Uthmani words and glyph codes (`g`) come from the Quran.com API; the app's line PNGs/fonts are never reused. Pages are drawn with the King Fahd Complex QCF V2 page fonts `public/qcf/p<N>.woff2` (98 MB, git-ignored, `tools/fetch_qcf.py`; CI fetches them; SW caches them on first view, not precached); Amiri Quran is only the fallback.
