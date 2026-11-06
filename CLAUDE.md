@@ -29,8 +29,8 @@ of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the
 
 ## Conventions
 - Bilal wants every tafsir fully vowelled. The app never invents or removes harakat: al-Mukhtasar comes fully
-  vowelled from `~/dev/media-harakat-books/books/mukhtasar-tafsir` (proved to add marks only); Saʿdī: surahs 40–114
-  are fully vocalised, 1–39 not yet (`meta.json.full` drives the notice); Muyassar: surahs 39–114 fully vowelled from `~/dev/media-harakat-books/books/muyassar-39-114/out` (same proof), 1–38 as printed. Re-run
+  vowelled from `~/dev/media-harakat-books/books/mukhtasar-tafsir` (proved to add marks only); Saʿdī: all 114 surahs fully vowelled,
+  `src/data/tafsir/*.json` copied from `~/dev/site-tafsir-sadi` (same format; 1–39 checked against the print there, so a few words differ from the APK) (`meta.json.full` drives the notice); Muyassar: surahs 39–114 fully vowelled from `~/dev/media-harakat-books/books/muyassar-39-114/out` (same proof), 1–38 as printed. Re-run
   `tools/make_meta.py` after any tafsir data change.
 - Arabic UI only; no editorial text beyond UI words and the About page.
 - Look follows web.surahapp.com/ar: cream and gold, star badges, framed mushaf page; all drawn in our own CSS/SVG, never their images or fonts. Theme is `html[data-theme]` (saved as `surah:theme`), not the system setting.
