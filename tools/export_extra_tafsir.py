@@ -3,8 +3,10 @@
 
 Output: public/tafsir/{muyassar,mukhtasar}/<n>.json = [{"a": first ayah, "b": last ayah, "t": text}, ...] in ayah order.
 
-Muyassar: data/tafsir-json/moyassar.jsonl (from tools/export_tafsir.py; git-ignored, in the main project folder),
-copied as is (no harakat added or removed). Ayahs that share one text become one passage (a..b);
+Muyassar: data/tafsir-json/moyassar.jsonl (from tools/export_tafsir.py; git-ignored, in the main project folder);
+suras 39-114 take the fully vowelled text of ~/dev/media-harakat-books/books/muyassar-39-114/out/*.txt instead
+(quran.com's printed text, marks only added there). A row is replaced only when both texts agree letter for letter,
+except the few printed-text fixes in MUYASSAR_SOURCE; an ayah missing in out/ shares the previous ayah's text. Ayahs that share one text become one passage (a..b);
 its "__________" footnote rule stays in the text, the reader turns it into styling.
 
 Mukhtasar: the fully vowelled text of ~/dev/media-harakat-books/books/mukhtasar-tafsir/out/*.txt
@@ -25,6 +27,8 @@ ROOT = pathlib.Path(__file__).resolve().parent.parent
 SRC = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else pathlib.Path.home() / "dev/app-surah-re/data/tafsir-json"
 VOWELLED = pathlib.Path(sys.argv[2]) if len(sys.argv) > 2 else \
     pathlib.Path.home() / "dev/media-harakat-books/books/mukhtasar-tafsir/out"
+MUYASSAR = pathlib.Path.home() / "dev/media-harakat-books/books/muyassar-39-114/out"
+MUYASSAR_SOURCE = {(54, 17)}   # APK typo «الاستنكار»; the printed book (and out/) reads «الاستكثار»
 OUT = ROOT / "public/tafsir"
 RANGE = re.compile(r"^\s*(\d+)\s*-\s*(\d+)\s*-\s*")
 MARK = re.compile("[ً-ْٰـ]")
@@ -35,6 +39,34 @@ def rows_of(fname):
     for line in open(SRC / fname, encoding="utf-8"):
         r = json.loads(line)
         by.setdefault(r["s"], {})[r["a"]] = r["t"] or ""
+    return by
+
+
+def vowel_muyassar(by):
+    got = {}
+    for f in sorted(MUYASSAR.glob("*.txt")):
+        for line in f.read_text(encoding="utf-8").splitlines():
+            if line.strip():
+                k, t = line.split("\t", 1)
+                s, a = map(int, k.split(":"))
+                got[(s, a)] = t.strip()
+    done = 0
+    for s in range(39, 115):
+        last = None
+        for a in sorted(by[s]):
+            old = by[s][a].strip()
+            if (s, a) in got:
+                new = got[(s, a)]
+                last = (old, new)
+            elif last and old == last[0]:
+                new = last[1]
+            else:
+                sys.exit(f"muyassar {s}:{a}: not in out/ and not the previous ayah's text")
+            if bare(new)[0] != bare(old)[0] and (s, a) not in MUYASSAR_SOURCE:
+                sys.exit(f"muyassar {s}:{a}: vowelled text differs from the app's")
+            by[s][a] = new
+            done += 1
+    print("muyassar vowelled ayahs:", done)
     return by
 
 
@@ -147,7 +179,7 @@ def write(kind, by):
     print(kind, total, "passages")
 
 
-write("muyassar", {s: passages(r) for s, r in rows_of("moyassar.jsonl").items()})
+write("muyassar", {s: passages(r) for s, r in vowel_muyassar(rows_of("moyassar.jsonl")).items()})
 by, kept, total = mukhtasar(rows_of("mukhtasar_ar.jsonl"))
 missing = [s for s in range(1, 115) if s not in by]
 if missing:
