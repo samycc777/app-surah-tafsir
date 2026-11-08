@@ -228,6 +228,14 @@
     syncPick();
 
     const tplFor = (i) => document.querySelector(`template[data-pass="${i}"]`);
+    // the Saʿdī paragraphs for ayah v: its own part when the passage is split per ayah, else all
+    const sadiFor = (v) => {
+      const t = tplFor(passes[v - 1]);
+      if (!t) return null;
+      const own = (t.dataset.own || '').split(' ').includes(String(v));
+      const ps = [...t.content.querySelectorAll(own ? `p[data-v="${v}"]` : 'p')];
+      return { ps, label: own ? label(v, v) : label(+t.dataset.a, +t.dataset.b) };
+    };
     const label = (a, b) => (a === b ? `الآية ${ar(a)}` : `الآيات ${ar(a)}–${ar(b)}`);
     const esc = (s) => String(s).replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
     const remember = (v) => store.set('last', JSON.stringify({ n, v, name }));
@@ -370,9 +378,9 @@
       if (qa) ayahBox.innerHTML = qa;
       else ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
       if (kind === 'saadi') {
-        const t = tplFor(passes[v - 1]);
-        bodyEl.innerHTML = t ? t.innerHTML : '';
-        sub.textContent = t ? `${name} · ${label(+t.dataset.a, +t.dataset.b)}` : name;
+        const x = sadiFor(v);
+        bodyEl.innerHTML = x ? x.ps.map((p) => p.outerHTML).join('') : '';
+        sub.textContent = x ? `${name} · ${x.label}` : name;
         note.hidden = full;
       } else {
         note.hidden = true;
@@ -492,9 +500,9 @@
     const passageText = async () => {
       let p = '', l = '';
       if (kind === 'saadi') {
-        const t = tplFor(passes[cur - 1]);
-        p = t ? [...t.content.querySelectorAll('p')].map((x) => x.textContent.trim()).join('\n\n') : '';
-        l = t ? label(+t.dataset.a, +t.dataset.b) : '';
+        const x = sadiFor(cur);
+        p = x ? x.ps.map((e) => e.textContent.trim()).join('\n\n') : '';
+        l = x ? x.label : '';
       } else {
         const x = extraFor(await loadExtra(kind).catch(() => []), cur);
         p = x ? extraPlain(x.t) : '';

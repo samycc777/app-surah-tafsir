@@ -45,6 +45,33 @@ export function passages(n) {
   ).passages;
 }
 
+// Saʿdī passage → [{ v, t }] paragraphs, each tagged with the ayah it comments on, plus the ayat
+// that have their own part (src/data/tafsir-ayah, made by tools/sadi_ayah_cuts.py from the Surah
+// app's per-ayah split). Ayat without their own part show the whole passage.
+export function ayahParts(n, i, p) {
+  const cuts = (readJson(`src/data/tafsir-ayah/${n}.json`)[i] || []);
+  const out = [];
+  let v = p.a;
+  p.p.forEach((t, pi) => {
+    let from = 0;
+    for (const [cv, cp, cc] of cuts) {
+      if (cp !== pi) continue;
+      const head = t.slice(from, cc).trim();
+      if (head) out.push({ v, t: head });
+      v = cv;
+      from = cc;
+    }
+    const rest = t.slice(from).trim();
+    if (rest) out.push({ v, t: rest });
+  });
+  const own = cuts.length ? [p.a, ...cuts.map((c) => c[0])] : [];
+  return { paras: out, own };
+}
+const jsonCache = {};
+function readJson(f) {
+  return (jsonCache[f] ||= JSON.parse(readFileSync(f, 'utf8')));
+}
+
 // "﴿…﴾" fragments Saʿdi quotes inside his prose → [[text, isVerse], …]
 export function pieces(t) {
   return t.split(/(﴿[^﴾]*﴾)/).filter(Boolean).map((s) => [s, s.startsWith('﴿')]);

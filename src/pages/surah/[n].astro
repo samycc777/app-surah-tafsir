@@ -1,7 +1,7 @@
 ---
 import App from '../../layouts/App.astro';
 import Icon from '../../components/Icon.astro';
-import { NAMES, ar, ayahWord, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
+import { NAMES, ar, ayahParts, ayahWord, meta, passageFor, passages, pieces, verses } from '../../lib.mjs';
 import MUSHAF_AYAHS from '../../data/mushaf-ayahs.json';
 import MUSHAF_SURAHS from '../../data/mushaf-surahs.json';
 
@@ -60,10 +60,10 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
       </button>
     </nav>
 
-    {ps.map((p, i) => (
-      <template data-pass={i} data-a={p.a} data-b={p.b}>
-        {p.p.map((t) => (
-          <p>{pieces(t).map(([x, q]) => (q ? <span class="q">{x}</span> : x))}</p>
+    {ps.map((p, i) => ayahParts(n, i, p)).map(({ paras, own }, i) => (
+      <template data-pass={i} data-a={ps[i].a} data-b={ps[i].b} data-own={own.join(' ')}>
+        {paras.map(({ v, t }) => (
+          <p data-v={v}>{pieces(t).map(([x, q]) => (q ? <span class="q">{x}</span> : x))}</p>
         ))}
       </template>
     ))}

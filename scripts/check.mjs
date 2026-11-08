@@ -1,6 +1,6 @@
 // Data guard: every ayah has a tafsir passage, and the meta file matches the data.
 import { readFileSync } from 'node:fs';
-import { META, passageFor, passages, verses } from '../src/lib.mjs';
+import { META, ayahParts, passageFor, passages, verses } from '../src/lib.mjs';
 
 let bad = 0;
 for (const m of META) {
@@ -18,6 +18,15 @@ for (const m of META) {
       break;
     }
   }
+  // the per-ayah split of Saʿdī keeps every letter, in order, and gives each listed ayah a part
+  ps.forEach((p, i) => {
+    const { paras, own } = ayahParts(m.n, i, p);
+    const flat = (a) => a.join('').replace(/\s+/g, '');
+    if (flat(paras.map((x) => x.t)) !== flat(p.p)) { console.log(`surah ${m.n}: Saʿdī split ${p.a}-${p.b} changes the text`); bad++; }
+    for (const v of own) {
+      if (v < p.a || v > p.b || !paras.some((x) => x.v === v)) { console.log(`surah ${m.n}: Saʿdī ayah ${v} has no part`); bad++; }
+    }
+  });
   for (const k of ['muyassar', 'mukhtasar']) {
     const list = JSON.parse(readFileSync(`public/tafsir/${k}/${m.n}.json`, 'utf8'));
     let next = 1;
