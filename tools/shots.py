@@ -50,8 +50,9 @@ def main():
         page.wait_for_timeout(300)
 
         # harakat off
-        page.click("#taf .sheet-head [data-close]")
+        page.click("#taf [data-close]")
         page.wait_for_timeout(200)
+        page.evaluate("document.body.classList.add('chrome')")  # the reader hides its bars until a tap
         page.click("#open-settings")
         page.wait_for_timeout(300)
         page.screenshot(path=f"{OUT}/settings.png")

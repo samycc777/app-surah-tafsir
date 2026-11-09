@@ -66,6 +66,14 @@ const full = title ? `${title} · تفسير السعدي` : `${SITE.title} · $
             <input type="checkbox" id="set-harakat" class="switch" />
           </label>
           <div class="row">
+            <span><b>التفسير</b><small>الذي يظهر عند الضغط على آية</small></span>
+            <span class="seg" id="set-tafsir">
+              <button type="button" data-kind="saadi" aria-pressed="false">السعدي</button>
+              <button type="button" data-kind="muyassar" aria-pressed="false">الميسر</button>
+              <button type="button" data-kind="mukhtasar" aria-pressed="false">المختصر</button>
+            </span>
+          </div>
+          <div class="row">
             <span><b>حجم الخط</b><small>للقرآن والتفسير</small></span>
             <span class="seg">
               <button type="button" id="fs-down" aria-label="تصغير">أ−</button>

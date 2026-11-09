@@ -66,6 +66,18 @@
     store.set('harakat', harakat ? '1' : '0');
     window.dispatchEvent(new CustomEvent('harakat'));
   });
+  // which tafsir the pop-up shows (the reader listens for 'tafsir')
+  const kindBtns = $$('#set-tafsir [data-kind]');
+  const syncKind = () => {
+    const k = ['saadi', 'muyassar', 'mukhtasar'].includes(store.get('tafsir')) ? store.get('tafsir') : 'saadi';
+    kindBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === k)));
+  };
+  syncKind();
+  kindBtns.forEach((b) => b.addEventListener('click', () => {
+    store.set('tafsir', b.dataset.kind);
+    syncKind();
+    window.dispatchEvent(new CustomEvent('tafsir', { detail: b.dataset.kind }));
+  }));
   $('#fs-up')?.addEventListener('click', () => { setFs(fs + 0.1); toast(`حجم الخط ${Math.round(fs * 100)}٪`); });
   $('#fs-down')?.addEventListener('click', () => { setFs(fs - 0.1); toast(`حجم الخط ${Math.round(fs * 100)}٪`); });
 
@@ -152,7 +164,6 @@
     readSurah();
     const sheet = $('#taf');
     const bodyEl = $('#taf-body');
-    const ayahBox = $('#taf-ayah');
     const sub = $('#taf-sub');
     const note = $('#taf-note');
     const bmBtn = $('#taf-bookmark');
@@ -223,9 +234,7 @@
     const extraHtml = (t) => t.split(/\s*_{5,}\s*/).map((part, i) =>
       `<p${i ? ' class="fn"' : ''}>${esc(part).replace(/_([^_]+)_/g, '<span class="q">$1</span>')}</p>`).join('');
     const extraPlain = (t) => t.replace(/\s*_{5,}\s*/g, '\n\n').replace(/_([^_]+)_/g, '$1');
-    const pickBtns = $$('.taf-pick [data-kind]');
-    const syncPick = () => pickBtns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.kind === kind)));
-    syncPick();
+    const SHORT = { saadi: 'السعدي', muyassar: 'الميسر', mukhtasar: 'المختصر' };
 
     const tplFor = (i) => document.querySelector(`template[data-pass="${i}"]`);
     // the Saʿdī paragraphs for ayah v: its own part when the passage is split per ayah, else all
@@ -349,38 +358,13 @@
       $$(`[data-v="${n}:${v}"]`, linesEl).forEach((e) => e.classList.add('on'));
     }
 
-    /* The ayah above the tafsir is drawn like the mushaf: its words in the QCF font of their page
-       (an ayah can run onto the next page). null = a font is missing; Amiri text is shown then. */
-    async function ayahQcf(v) {
-      const key = `${n}:${v}`;
-      const out = [];
-      for (let p = map[v]; p && p <= Math.min(604, map[v] + 2); p++) {
-        const mine = (await getPage(p)).rows.flatMap((r) => r.words || []).filter((w) => w.v === key);
-        if (!mine.length) { if (out.length) break; continue; }
-        if (mine.some((w) => !w.g) || !(await fontFor(p))) return null;
-        for (const w of mine) {
-          const g = esc(w.g);
-          if ((w.k === 'pause' || w.k === 'sajdah') && out.length) out[out.length - 1].g += g;
-          else out.push({ g, p, end: w.k === 'end' });
-        }
-        if (mine.some((w) => w.k === 'end')) break;
-      }
-      if (!out.length) return null;
-      return out.map((w) => `<span${w.end ? ' class="an"' : ''} style="font-family:qcf${w.p}">${w.g}</span>`).join(' ');
-    }
-
     let tafReq = 0;
     async function renderTaf(v) {
       const my = ++tafReq;
-      const qa = await ayahQcf(v).catch(() => null);
-      if (my !== tafReq) return;
-      ayahBox.classList.toggle('qcf', !!qa);
-      if (qa) ayahBox.innerHTML = qa;
-      else ayahBox.textContent = `${ayahs[v - 1]} ﴿${ar(v)}﴾`;
       if (kind === 'saadi') {
         const x = sadiFor(v);
         bodyEl.innerHTML = x ? x.ps.map((p) => p.outerHTML).join('') : '';
-        sub.textContent = x ? `${name} · ${x.label}` : name;
+        sub.textContent = x ? `${SHORT[kind]} · ${x.label}` : SHORT[kind];
         note.hidden = full;
       } else {
         note.hidden = true;
@@ -388,30 +372,52 @@
         try { x = extraFor(await loadExtra(kind), v); } catch { /* offline, not cached yet */ }
         if (my !== tafReq) return;
         bodyEl.innerHTML = x ? extraHtml(x.t) : '<p>تعذّر تحميل التفسير</p>';
-        sub.textContent = x ? `${name} · ${label(x.a, x.b)}` : name;
+        sub.textContent = x ? `${SHORT[kind]} · ${label(x.a, x.b)}` : SHORT[kind];
       }
       if (!harakat) strip(bodyEl);
       highlight(v);
-      $('#taf-prev').disabled = v <= 1;
-      $('#taf-next').disabled = v >= count;
       const on = isSaved(n, v);
       bmBtn.setAttribute('aria-pressed', String(on));
-      $('.sheet-body', sheet).scrollTop = 0;
+      $('.tp-body', sheet).scrollTop = 0;
+      place();
     }
 
-    function showSheet(v, scroll) {
+    /* The tafsir opens in a small pop-up next to the tapped word (like a footnote), with its
+       arrow pointing at it: below the word when there is room, else above. */
+    let anchor = null;
+    const anchorEl = () => (anchor && anchor.isConnected && linesEl.contains(anchor) ? anchor
+      : $(`.w[data-v="${n}:${cur}"]`, linesEl) || $(`[data-v="${n}:${cur}"]`, linesEl));
+    function place() {
+      if (sheet.hidden) return;
+      const a = anchorEl();
+      const vw = document.documentElement.clientWidth, vh = innerHeight;
+      const r = a ? a.getBoundingClientRect() : { left: vw / 2, width: 0, top: vh / 3, bottom: vh / 3 };
+      sheet.style.maxHeight = '';
+      const below = vh - r.bottom - 24, above = r.top - 24;
+      const down = below >= Math.min(sheet.offsetHeight, vh * 0.55) || below >= above;
+      sheet.style.maxHeight = `${Math.max(160, Math.min(down ? below : above, vh * 0.7))}px`;
+      const w = sheet.offsetWidth, h = sheet.offsetHeight, mid = r.left + r.width / 2;
+      const left = Math.max(8, Math.min(mid - w / 2, vw - w - 8));
+      const top = down ? r.bottom + 10 : r.top - h - 10;
+      sheet.classList.toggle('up', !down);
+      sheet.style.left = `${left}px`;
+      sheet.style.top = `${Math.max(8, Math.min(top, vh - h - 8))}px`;
+      sheet.style.setProperty('--ax', `${Math.max(18, Math.min(mid - left, w - 18))}px`);
+    }
+
+    function showSheet(v, scroll, el = null) {
       if (v < 1 || v > count) return;
       cur = v;
-      renderTaf(v);
+      anchor = el;
       sheet.hidden = false;
-      document.body.style.overflow = 'hidden';
+      renderTaf(v);
       history.replaceState(null, '', `${location.pathname}#${v}`);
       remember(v);
     }
 
     function closeSheet() {
       sheet.hidden = true;
-      document.body.style.overflow = '';
+      anchor = null;
       $$('.on').forEach((e) => e.classList.remove('on'));
       const a = pageData ? surahAyahOnPage(pageData) : null;
       history.replaceState(null, '', a ? `${location.pathname}#${a}` : location.pathname);
@@ -464,13 +470,6 @@
       }
     }
 
-    function open(v, scroll) {
-      if (v < 1 || v > count) return;
-      const p = map[v];
-      if (p && p !== page) load(p, { hash: v, open: v });
-      else showSheet(v, scroll);
-    }
-
     linesEl.addEventListener('click', (e) => {
       const el = e.target.closest('[data-v]');
       if (!el) return;
@@ -479,17 +478,23 @@
         switchTo(s).then(() => load(map[a] || page, { hash: a, open: a }), () => { location.href = `/surah/${s}/#${a}`; });
         return;
       }
+      if (!sheet.hidden && a === cur) { closeSheet(); return; } // the same ayah again: close
       if (map[a] && map[a] !== page) load(map[a], { hash: a, open: a });
-      else showSheet(a, false);
+      else showSheet(a, false, el);
     });
+    // a tap anywhere outside the pop-up (except another ayah) only closes it
+    document.addEventListener('click', (e) => {
+      if (sheet.hidden || sheet.contains(e.target)) return;
+      if (linesEl.contains(e.target) && e.target.closest('[data-v]')) return;
+      e.stopPropagation(); e.preventDefault();
+      closeSheet();
+    }, true);
 
     sheet.querySelectorAll('[data-close]').forEach((el) => el.addEventListener('click', closeSheet));
     backHandlers.push(() => !sheet.hidden && (closeSheet(), true));
     document.addEventListener('keydown', (e) => {
       if (e.key === 'Escape' && !sheet.hidden) closeSheet();
     });
-    $('#taf-prev').addEventListener('click', () => open(cur - 1, true));
-    $('#taf-next').addEventListener('click', () => open(cur + 1, true));
 
     bmBtn.addEventListener('click', () => {
       const on = toggleSaved(n, cur, name);
@@ -535,13 +540,7 @@
     });
 
     window.addEventListener('harakat', () => { if (!sheet.hidden) renderTaf(cur); });
-    pickBtns.forEach((b) => b.addEventListener('click', () => {
-      if (b.dataset.kind === kind) return;
-      kind = b.dataset.kind;
-      store.set('tafsir', kind);
-      syncPick();
-      renderTaf(cur);
-    }));
+    window.addEventListener('tafsir', (e) => { kind = e.detail; if (!sheet.hidden) renderTaf(cur); });
 
     /* reader tools: page mark, share, help, fullscreen */
     const markBtn = $('#r-mark');
@@ -570,7 +569,7 @@
     const bar = $('.bar');
     const setBarH = () => document.documentElement.style.setProperty('--bar-h', `${bar?.offsetHeight || 60}px`);
     setBarH();
-    document.fonts?.ready.then(() => { fit(); fit(sideLines(-1)); fit(sideLines(1)); });
+    document.fonts?.ready.then(() => { fit(); fit(sideLines(-1)); fit(sideLines(1)); place(); });
     // in the app the phone's own status/navigation bars hide and show with ours
     const cut = native?.cutoutTop ? native.cutoutTop() : 0;
     document.documentElement.style.setProperty('--cut-top', `${cut}px`);
@@ -633,6 +632,7 @@
     addEventListener('pageshow', (e) => { if (e.persisted) { setX(0); busy = false; } });
     function turn(k, from = 0, v = 0) {
       if (busy) return;
+      if (!sheet.hidden) closeSheet();
       const W = track.clientWidth;
       if (!has(k)) { setX(0, from ? 220 : 0); return; }
       busy = true;
@@ -695,7 +695,7 @@
     let rz;
     addEventListener('resize', () => {
       clearTimeout(rz);
-      rz = setTimeout(() => { setBarH(); fit(); fit(sideLines(-1)); fit(sideLines(1)); }, 150);
+      rz = setTimeout(() => { setBarH(); fit(); fit(sideLines(-1)); fit(sideLines(1)); place(); }, 150);
     });
 
     const h = parseInt(location.hash.slice(1), 10);

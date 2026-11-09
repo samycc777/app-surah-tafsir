@@ -1,18 +1,18 @@
 # app-surah
 
-PWA Qur'an reader with three tafsirs — Saʿdī, al-Muyassar, al-Mukhtaṣar — picked in the tafsir sheet (Arabic-only, RTL; light by default, dark via the ☾ button). Rebuilt from a reverse‑engineering
+PWA Qur'an reader with three tafsirs — Saʿdī, al-Muyassar, al-Mukhtaṣar — picked in the settings sheet (Arabic-only, RTL; light by default, dark via the ☾ button). Rebuilt from a reverse‑engineering
 of the Android app `com.surahapp`; the dossier is `docs/notes/re-report.md`, the raw APK/DB in
 `apk/` and `db/` (git‑ignored). Live: https://surah-tafsir.pages.dev
 
 ## Where things live
-- `src/pages/`: `index` (surah list + juz tab), `surah/[n]` (15-line mushaf page + tafsir sheet), `search`, `saved`, `about`.
+- `src/pages/`: `index` (surah list + juz tab), `surah/[n]` (15-line mushaf page + tafsir pop-up: tapping an ayah opens a small box next to the tapped word, like a footnote, arrow pointing at it; tafsir choice lives in settings), `search`, `saved`, `about`.
   `src/layouts/App.astro` is the shell (top bar: logo, ☾, saved, search, menu; settings sheet; toast). No bottom tab bar.
 - `src/lib.mjs`: `ar()`, `ayahWord()`, `verses`, `passages()`, `passageFor()`, `JUZ` (from the page files). Reads data by cwd
   path (`src/data/...`), never `import.meta.url` — Astro's prerender bundling breaks that.
 - `src/data/`: Tanzil text, `tafsir/<n>.json` passages, `tafsir-ayah/<n>.json` (where each ayah's own Saʿdī part starts, from `tools/sadi_ayah_cuts.py`: aligns our text with the APK's per-ayah split; the sheet shows only the tapped ayah's part, the whole passage when it has none, e.g. most of Āl ʿImrān, a different edition), `meta.json` (generated), `mushaf-ayahs.json` (ayah→page) and `mushaf-surahs.json` (page ranges).
 - `public/tafsir/{muyassar,mukhtasar}/<n>.json`: `[{a,b,t}]` passages, fetched by the sheet; made by `tools/export_extra_tafsir.py` from the git-ignored `data/tafsir-json/*.jsonl` (Mukhtasar text: media-harakat-books' vowelled `out/`, keeping the APK's `_word_` highlights; Muyassar 39–114 likewise from its vowelled `out/`). Saʿdī stays in the page as `<template>`s.
 - `public/mushaf/pages/<1..604>.json`: API-generated 15-line page data (words, surah bands, juz); fetched by the reader and pre-cached.
-- `public/js/app.js`: sheet, harakat strip, bookmarks, last position, install, SW. Page turns slide in `#m-track`: the current `.m-page` plus two `.ghost` neighbours drawn in advance (next on the left, RTL book order); swiping past the surah's pages (or tapping the other surah on a shared page) swaps that surah in without a reload (`switchTo`: fetches its page HTML, replaces data, Saʿdī templates, nav; a reload made the screen blink), `/surah/N/?p=page` is the fallback; the tafsir sheet's ayah is drawn with the QCF page fonts (`ayahQcf`). `search.js`: bucket client.
+- `public/js/app.js`: tafsir pop-up (`place()`), harakat strip, bookmarks, last position, install, SW. Page turns slide in `#m-track`: the current `.m-page` plus two `.ghost` neighbours drawn in advance (next on the left, RTL book order); swiping past the surah's pages (or tapping the other surah on a shared page) swaps that surah in without a reload (`switchTo`: fetches its page HTML, replaces data, Saʿdī templates, nav; a reload made the screen blink), `/surah/N/?p=page` is the fallback. `search.js`: bucket client.
 - `scripts/`: `search-index.mjs` and `sw-manifest.mjs` run after `astro build`; `check.mjs` guards data.
 - `tools/`: `make_meta.py` (meta + harakat audit), `export_tafsir.py` (APK DB → JSONL), `fetch_mushaf.py` (Quran.com API → page JSON, one-time), `shots.py` (smoke test).
 - `android/`: plain WebView app (`dev.pages.surahtafsir`) that shows the built `dist/` from `assets/www` via WebViewAssetLoader (works offline); `window.SurahNative` bridges theme bar colour, fullscreen, `immersive()` (the reader hides the phone's bars with its own), `cutoutTop()` and the share sheet; WebView debugging is on (DevTools over adb); the back button asks `window.surahBack()` (closes an open sheet) before leaving the page.

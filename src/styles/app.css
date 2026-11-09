@@ -254,33 +254,37 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
   color: var(--brand); font-family: var(--ui); font-size: .58rem; cursor: pointer;
 }
 .fbtn .icon { width: 17px; height: 17px; }
-#taf-next .icon { transform: scaleX(-1); }
 .fbtn:hover { background: var(--soft); }
 .fbtn:disabled { opacity: .35; }
 .fbtn[aria-pressed='true'] { background: var(--brand-solid); color: var(--on-brand); border-color: var(--brand-solid); }
 .fbtn[aria-pressed='true'] .icon { fill: currentColor; }
 .chip { font-family: var(--ui); font-size: .66rem; color: var(--brand); background: var(--card); border: 1px solid var(--line); border-radius: 999px; padding: 3px 9px; }
 .chip.bad { color: var(--bad-ink); background: var(--bad-soft); border-color: var(--bad-line); }
-.ayahbox {
-  font-family: var(--mushaf); font-size: calc(1.15rem * var(--fs)); line-height: 2.1;
-  background: var(--page); border: 1px solid var(--gold-line); border-radius: 14px;
-  padding: 10px 14px; margin: 8px 0 12px; color: var(--page-ink);
-  max-height: 34vh; overflow-y: auto;
-}
-/* QCF page font: the same letters as the mushaf page */
-.ayahbox.qcf { font-size: calc(1.45rem * var(--fs)); line-height: 2; word-spacing: .05em; text-align: justify; }
-.ayahbox.qcf .an { color: var(--gold-ink); }
 .taf { font-size: calc(1.05rem * var(--fs)); line-height: 2.05; }
 .taf p { margin: 0 0 .75em; }
 .taf .q { color: var(--brand); }
 .taf-note { margin: 0 0 12px; }
 .taf .fn { font-size: .86em; color: var(--muted); border-top: 1px solid var(--line); padding-top: .5em; }
-.taf-pick { display: flex; gap: 6px; padding: 4px 16px 8px; }
-.taf-pick button {
-  flex: 1; height: 36px; border: 1px solid var(--line); border-radius: 999px; background: var(--card);
-  color: var(--muted); font-family: var(--ui); font-size: .72rem; cursor: pointer;
+/* tafsir pop-up next to the tapped ayah (like a footnote); app.js place() sets top/left/--ax */
+.tafpop {
+  position: fixed; z-index: 60; width: min(30rem, calc(100vw - 16px)); display: flex; flex-direction: column;
+  background: var(--card); color: var(--ink); border: 1px solid var(--gold-line); border-radius: 14px;
+  box-shadow: 0 8px 28px var(--shadow); animation: fade .15s ease;
 }
-.taf-pick button[aria-checked='true'] { background: var(--orn-fill); border-color: var(--gold); color: var(--orn-ink); font-weight: 700; }
+.tafpop[hidden] { display: none; }
+.tafpop::before {
+  content: ''; position: absolute; top: -7px; left: calc(var(--ax, 50%) - 7px); width: 12px; height: 12px;
+  background: var(--card); border-left: 1px solid var(--gold-line); border-top: 1px solid var(--gold-line); transform: rotate(45deg);
+}
+.tafpop.up::before { top: auto; bottom: -7px; transform: rotate(225deg); }
+.tp-head { display: flex; align-items: center; gap: 2px; padding: 4px 6px 0 4px; padding-inline-start: 14px; }
+.tp-sub { flex: 1; min-width: 0; font-family: var(--ui); font-size: .68rem; color: var(--gold-ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tp-head .iconbtn { width: 34px; height: 34px; color: var(--muted); }
+.tp-head .iconbtn[aria-pressed='true'] { color: var(--gold); }
+.tp-head .iconbtn[aria-pressed='true'] .icon { fill: currentColor; }
+.tp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 2px 16px 8px; }
+.tp-body .taf p:last-child { margin-bottom: 0; }
+.seg button[aria-pressed='true'] { background: var(--orn-fill); color: var(--orn-ink); font-weight: 700; }
 
 /* ── settings rows ───────────────────────────────────── */
 .row { display: flex; align-items: center; gap: 12px; padding: 14px 2px; border-bottom: 1px solid var(--line); width: 100%; background: none; border-left: 0; border-right: 0; border-top: 0; text-align: start; text-decoration: none; color: var(--ink); cursor: pointer; }
