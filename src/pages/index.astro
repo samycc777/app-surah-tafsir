@@ -36,6 +36,11 @@ import { META, JUZ, ar, ayahWord } from '../lib.mjs';
   </div>
 
   <div class="list" id="tab-s">
+    <div class="card searchbar s-find">
+      <Icon name="search" size={20} />
+      <input type="search" id="s-find" placeholder="ابحث عن سورة: اسمها أو رقمها" aria-label="ابحث عن سورة" autocomplete="off" />
+    </div>
+    <p class="note s-none" id="s-none" hidden>لا توجد سورة بهذا الاسم</p>
     {META.map((m) => (
       <a class="scard" href={`/surah/${m.n}/`}>
         <span class="badge"><svg viewBox="0 0 60 60"><use href="#orn" /></svg><b class="bn">{ar(m.n)}</b></span>

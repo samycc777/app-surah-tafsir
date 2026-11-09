@@ -136,6 +136,24 @@
     if (store.get('tab') === 'j') show('j');
   }
 
+  /* ── home: find a surah by name or number ──────────── */
+  const sFind = $('#s-find');
+  if (sFind) {
+    const fold = (s) => String(s).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d)).replace(/[\u064B-\u0652\u0670\u0640]/g, '')
+      .replace(/[أإآٱ]/g, 'ا').replace(/ى/g, 'ي').replace(/ة/g, 'ه').replace(/\s+/g, ' ').trim();
+    const cards = $$('#tab-s .scard').map((a) => [a, fold($('.sname', a).textContent).replace(/^سوره /, ''), fold($('.bn', a).textContent)]);
+    sFind.addEventListener('input', () => {
+      const q = fold(sFind.value).replace(/^سوره ?/, '');
+      let any = false;
+      for (const [a, nm, num] of cards) {
+        const ok = !q || (/^\d+$/.test(q) ? num === q : nm.includes(q) || nm.replace(/^ال/, '').startsWith(q.replace(/^ال/, '')));
+        a.hidden = !ok;
+        any ||= ok;
+      }
+      $('#s-none').hidden = any;
+    });
+  }
+
   /* ── bookmarks ─────────────────────────────────────── */
   const savedList = () => {
     try { return JSON.parse(store.get('saved') || '[]'); } catch { return []; }

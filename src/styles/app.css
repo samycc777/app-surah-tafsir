@@ -439,3 +439,9 @@ body.mushaf-shell:not(.chrome) .m-nav { transform: translateY(100%); box-shadow:
 #m-next { justify-self: end; }
 .m-count { color: var(--muted); font-family: var(--ui); font-size: .62rem; text-align: center; }
 :fullscreen body { padding-bottom: 0; }
+
+/* find a surah (home, surahs tab) */
+.s-find { margin: 0; padding: 4px 16px; color: var(--muted); }
+.s-find input { padding: 10px 8px; }
+.scard[hidden] { display: none; }
+.s-none { text-align: center; }
