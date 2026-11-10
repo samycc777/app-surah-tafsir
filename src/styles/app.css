@@ -284,6 +284,13 @@ h1, h2, h3 { font-family: var(--ui); font-weight: 700; line-height: 1.5; }
 .tp-head .iconbtn[aria-pressed='true'] .icon { fill: currentColor; }
 .tp-body { flex: 1 1 auto; min-height: 0; overflow-y: auto; -webkit-overflow-scrolling: touch; overscroll-behavior: contain; padding: 2px 16px 8px; }
 .tp-body .taf p:last-child { margin-bottom: 0; }
+/* what the pop-up shows: the ayah's tafsir, or the tapped word's meaning / iʿrāb / taṣrīf */
+.tp-tabs { display: flex; gap: 4px; padding: 2px 12px 6px; }
+.tp-tabs[hidden] { display: none; }
+.tp-tabs button { flex: 1; border: 1px solid var(--line); border-radius: 99px; background: var(--card); padding: 5px 2px; font-family: var(--ui); font-size: .7rem; color: var(--brand); cursor: pointer; }
+.tp-tabs button[aria-pressed='true'] { background: var(--orn-fill); color: var(--orn-ink); border-color: transparent; font-weight: 700; }
+.tp-tabs button:disabled { opacity: .45; cursor: default; }
+.taf .wd { font-family: var(--mushaf); font-size: 1.3em; line-height: 1.7; color: var(--brand); margin-bottom: .1em; }
 .seg button[aria-pressed='true'] { background: var(--orn-fill); color: var(--orn-ink); font-weight: 700; }
 
 /* ── settings rows ───────────────────────────────────── */

@@ -254,6 +254,32 @@
     const extraPlain = (t) => t.replace(/\s*_{5,}\s*/g, '\n\n').replace(/_([^_]+)_/g, '$1');
     const SHORT = { saadi: 'السعدي', muyassar: 'الميسر', mukhtasar: 'المختصر' };
 
+    /* per-word study texts (meaning, iʿrāb, taṣrīf): one file per mushaf page and kind, one text
+       per word in page order (tools/export_words.py); `mode` is what the pop-up shows */
+    const WKINDS = { meaning: 'المعنى', irab: 'الإعراب', sarf: 'التصريف' };
+    const WSOURCE = 'مركز تفسير للدراسات القرآنية';
+    const tabsEl = $('#taf-tabs');
+    let mode = WKINDS[store.get('pop')] ? store.get('pop') : 'taf';
+    let curW = null; // the tapped word: { i: index among the page's words, p: page, t: text, g: page-font glyph }
+    const wordMode = () => mode !== 'taf' && !!curW && !!tabsEl;
+    const wordJson = {};
+    const loadWords = (k, p) => {
+      wordJson[`${k}/${p}`] ||= fetch(`/words/${k}/${p}.json`).then((r) => { if (!r.ok) throw new Error(k); return r.json(); })
+        .catch((e) => { delete wordJson[`${k}/${p}`]; throw e; });
+      return wordJson[`${k}/${p}`];
+    };
+    // ﴿…﴾ and {…} are the Qur'an's own words inside the explanation
+    const wordHtml = (t) => t.split('\n').filter((x) => x.trim()).map((x) =>
+      `<p>${esc(x).replace(/(﴿[^﴾]*﴾|\{[^}]*\})/g, '<span class="q">$1</span>')}</p>`).join('');
+    const syncTabs = () => {
+      if (!tabsEl) return;
+      const shown = wordMode() ? mode : 'taf';
+      $$('button', tabsEl).forEach((b) => {
+        b.setAttribute('aria-pressed', String(b.dataset.mode === shown));
+        b.disabled = b.dataset.mode !== 'taf' && !curW; // no word tapped (ayah number, link)
+      });
+    };
+
     const tplFor = (i) => document.querySelector(`template[data-pass="${i}"]`);
     // the Saʿdī paragraphs for ayah v: its own part when the passage is split per ayah, else all
     const sadiFor = (v) => {
@@ -298,6 +324,7 @@
       if (textRows <= 8) while (rows.length && rows[rows.length - 1].blank) rows.pop();
       L.style.setProperty('--rows', rows.length);
       const G = (w) => esc(qcf ? w.g : w.t);
+      let wi = 0; // index among the page's words: the key into /words/<kind>/<page>.json
       L.innerHTML = rows.map((r) => {
         if (r.band) return `<div class="m-band"><span>سورة ${esc(r.band.name)}</span></div>`;
         if (r.bas) return bas && basGlyphs
@@ -323,7 +350,7 @@
           if (w.k === 'pause' || w.k === 'sajdah') {
             return `<span class="m-pause" data-v="${w.v}">${G(w)}</span>`;
           }
-          return `<span class="w" data-v="${w.v}">${G(w)}</span>`;
+          return `<span class="w" data-v="${w.v}" data-i="${wi++}">${G(w)}</span>`;
         }).join('') + `</div>`;
       }).join('');
       fit(L);
@@ -373,11 +400,31 @@
 
     function highlight(v) {
       $$('.w.on, .m-num.on, .m-pause.on').forEach((e) => e.classList.remove('on'));
+      if (wordMode() && anchor && anchor.isConnected) { anchor.classList.add('on'); return; } // the word alone
       $$(`[data-v="${n}:${v}"]`, linesEl).forEach((e) => e.classList.add('on'));
     }
 
     let tafReq = 0;
+    async function renderWord(v) {
+      const my = ++tafReq;
+      const { i, p, t, g } = curW;
+      note.hidden = true;
+      let x = null;
+      try { x = (await loadWords(mode, p))[i]; } catch { /* offline, not cached yet */ }
+      if (my !== tafReq || !curW) return;
+      bodyEl.innerHTML = x ? wordHtml(x) : '<p>تعذّر التحميل</p>';
+      if (!harakat) strip(bodyEl);
+      // the Qur'an's word keeps its marks: drawn as on the page (its glyph in the page font) when that font is loaded
+      bodyEl.insertAdjacentHTML('afterbegin', g ? `<p class="wd" style="font-family:qcf${p}">${esc(g)}</p>` : `<p class="wd">${esc(t)}</p>`);
+      sub.textContent = `${WKINDS[mode]} · ${label(v, v)}`;
+      highlight(v);
+      bmBtn.setAttribute('aria-pressed', String(isSaved(n, v)));
+      $('.tp-body', sheet).scrollTop = 0;
+      place();
+    }
     async function renderTaf(v) {
+      syncTabs();
+      if (wordMode()) return renderWord(v);
       const my = ++tafReq;
       if (kind === 'saadi') {
         const x = sadiFor(v);
@@ -427,6 +474,9 @@
       if (v < 1 || v > count) return;
       cur = v;
       anchor = el;
+      const wd = el && el.classList.contains('w') && el.dataset.i != null && pageData
+        ? pageData.rows.flatMap((r) => r.words || []).filter((w) => w.k === 'word')[+el.dataset.i] : null;
+      curW = wd ? { i: +el.dataset.i, p: page, t: wd.t, g: linesEl.classList.contains('qcf') ? el.textContent : '' } : null;
       sheet.hidden = false;
       renderTaf(v);
       history.replaceState(null, '', `${location.pathname}#${v}`);
@@ -436,6 +486,7 @@
     function closeSheet() {
       sheet.hidden = true;
       anchor = null;
+      curW = null;
       $$('.on').forEach((e) => e.classList.remove('on'));
       const a = pageData ? surahAyahOnPage(pageData) : null;
       history.replaceState(null, '', a ? `${location.pathname}#${a}` : location.pathname);
@@ -481,7 +532,7 @@
       const a = surahAyahOnPage(d);
       if (opts.hash) history.replaceState(null, '', `${location.pathname}#${opts.hash}`);
       else if (!opts.keepHash && a) history.replaceState(null, '', `${location.pathname}#${a}`);
-      if (opts.open) { showSheet(opts.open, false); }
+      if (opts.open) { showSheet(opts.open, false, opts.wi != null ? $(`.w[data-i="${opts.wi}"]`, linesEl) : null); }
       else {
         if (opts.highlight) highlight(opts.highlight);
         remember(opts.highlight || a || d.s.a);
@@ -493,11 +544,13 @@
       if (!el) return;
       const [s, a] = el.dataset.v.split(':').map(Number);
       if (s !== n) { // a word of the other surah on a shared page
-        switchTo(s).then(() => load(map[a] || page, { hash: a, open: a }), () => { location.href = `/surah/${s}/#${a}`; });
+        const wi = mode !== 'taf' && tabsEl && el.classList.contains('w') ? el.dataset.i : null; // keep the tapped word
+        switchTo(s).then(() => load(wi != null ? page : map[a] || page, { hash: a, open: a, wi }), () => { location.href = `/surah/${s}/#${a}`; });
         return;
       }
-      if (!sheet.hidden && a === cur) { closeSheet(); return; } // the same ayah again: close
-      if (map[a] && map[a] !== page) load(map[a], { hash: a, open: a });
+      const word = mode !== 'taf' && tabsEl && el.classList.contains('w'); // word texts: stay on the tapped word
+      if (!sheet.hidden && a === cur && !(word && el !== anchor)) { closeSheet(); return; } // the same ayah (word) again: close
+      if (!word && map[a] && map[a] !== page) load(map[a], { hash: a, open: a });
       else showSheet(a, false, el);
     });
     // a tap anywhere outside the pop-up (except another ayah) only closes it
@@ -522,6 +575,10 @@
 
     const passageText = async () => {
       let p = '', l = '';
+      if (wordMode()) {
+        const x = await loadWords(mode, curW.p).then((d) => d[curW.i], () => '');
+        return { label: label(cur, cur), title: WKINDS[mode], text: `﴿${curW.t}﴾\n\n${x}\n\n${WKINDS[mode]} · ${WSOURCE}\n${ORIGIN}/surah/${n}/#${cur}` };
+      }
       if (kind === 'saadi') {
         const x = sadiFor(cur);
         p = x ? x.ps.map((e) => e.textContent.trim()).join('\n\n') : '';
@@ -531,7 +588,7 @@
         p = x ? extraPlain(x.t) : '';
         l = x ? label(x.a, x.b) : '';
       }
-      return { label: l, text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${KINDS[kind]}\n${ORIGIN}/surah/${n}/#${cur}` };
+      return { label: l, title: KINDS[kind], text: `﴿${ayahs[cur - 1]}﴾\n\n${p}\n\n${KINDS[kind]}\n${ORIGIN}/surah/${n}/#${cur}` };
     };
 
     const copyText = async (text) => {
@@ -548,16 +605,23 @@
 
     $('#taf-copy').addEventListener('click', async () => copyText((await passageText()).text));
     $('#taf-share').addEventListener('click', async () => {
-      const { text, label: l } = await passageText();
+      const { text, label: l, title } = await passageText();
       if (native?.share) { native.share(text); return; }
       if (navigator.share) {
-        try { await navigator.share({ title: `${KINDS[kind]} · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
+        try { await navigator.share({ title: `${title} · ${name} · ${l}`, text, url: `${ORIGIN}/surah/${n}/#${cur}` }); } catch { /* cancelled */ }
         return;
       }
       copyText(text);
     });
 
     window.addEventListener('harakat', () => { if (!sheet.hidden) renderTaf(cur); });
+    tabsEl?.addEventListener('click', (e) => {
+      const b = e.target.closest('button[data-mode]');
+      if (!b || b.disabled) return;
+      mode = b.dataset.mode;
+      store.set('pop', mode);
+      renderTaf(cur);
+    });
     window.addEventListener('tafsir', (e) => { kind = e.detail; if (!sheet.hidden) renderTaf(cur); });
 
     /* reader tools: page mark, share, help, fullscreen */

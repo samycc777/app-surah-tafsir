@@ -38,5 +38,15 @@ for (const m of META) {
     bad++;
   }
 }
+// word texts: one per word of every mushaf page, for each kind
+for (let p = 1; p <= 604; p++) {
+  const words = JSON.parse(readFileSync(`public/mushaf/pages/${p}.json`, 'utf8')).rows
+    .flatMap((r) => r.words || []).filter((w) => w.k === 'word').length;
+  for (const k of ['meaning', 'irab', 'sarf']) {
+    let list = [];
+    try { list = JSON.parse(readFileSync(`public/words/${k}/${p}.json`, 'utf8')); } catch { /* missing */ }
+    if (list.length !== words || list.some((t) => !t || !t.trim())) { console.log(`page ${p}: ${k} has ${list.length} texts for ${words} words`); bad++; }
+  }
+}
 console.log(bad ? `${bad} problem(s)` : `ok: ${META.length} surahs, every ayah covered`);
 process.exit(bad ? 1 : 0);

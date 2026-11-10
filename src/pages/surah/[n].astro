@@ -78,6 +78,12 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
         <button class="iconbtn" id="taf-share" type="button" aria-label="مشاركة"><Icon name="share" size={17} /></button>
         <button class="iconbtn" data-close type="button" aria-label="إغلاق"><Icon name="close" size={17} /></button>
       </header>
+      <div class="tp-tabs" id="taf-tabs">
+        <button type="button" data-mode="taf" aria-pressed="true">التفسير</button>
+        <button type="button" data-mode="meaning" aria-pressed="false">المعنى</button>
+        <button type="button" data-mode="irab" aria-pressed="false">الإعراب</button>
+        <button type="button" data-mode="sarf" aria-pressed="false">التصريف</button>
+      </div>
       <div class="tp-body">
         <p class="chip bad taf-note" id="taf-note" hidden>الحركات الكاملة غير متوفرة لهذه السورة بعد</p>
         <div class="taf" id="taf-body"></div>
