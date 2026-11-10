@@ -5,7 +5,9 @@ Usage: python3 tools/export_words.py [path/to/surah_database_app_v34.db]
 
 Writes public/words/{meaning,irab,sarf}/<page>.json: one string per word of that mushaf
 page, in the order of the `k == "word"` items of public/mushaf/pages/<page>.json (the reader
-numbers its word spans the same way). Texts are copied as they are.
+numbers its word spans the same way). Texts are copied as they are; the meanings, which come
+unvowelled, take their full harakat from harakat/meaning/map.json (tools/meaning_harakat.py map)
+where it has them.
 
 The DB and the page data split five ayahs differently; those are listed in JOIN / SHARE.
 """
@@ -19,6 +21,7 @@ DB = pathlib.Path(sys.argv[1]) if len(sys.argv) > 1 else (
     ROOT / "db/assets/flutter_assets/database/surah_database_app_v34.db")
 PAGES = ROOT / "public/mushaf/pages"
 OUT = ROOT / "public/words"
+VOWELLED = ROOT / "harakat/meaning/map.json"
 
 KINDS = {
     "meaning": ("word_content_meaning", "meaning"),
@@ -38,11 +41,15 @@ def main():
             "select surah_no, ayah_no, word_no, word_with_haraqah from quran_word_summary"):
         names[(s, a, w)] = t
     data = {}
+    vowelled = json.loads(VOWELLED.read_text(encoding="utf-8")) if VOWELLED.exists() else {}
     for kind, (table, col) in KINDS.items():
         per = {}
         for s, a, w, t in con.execute(
                 f"select surahNo, ayahNo, wordNo, {col} from {table} order by surahNo, ayahNo, wordNo"):
-            per.setdefault((s, a), []).append((w, (t or "").strip()))
+            t = (t or "").strip()
+            if kind == "meaning":
+                t = vowelled.get(t, t)
+            per.setdefault((s, a), []).append((w, t))
         data[kind] = per
 
     def texts(kind, s, a, n):
