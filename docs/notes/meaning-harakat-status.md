@@ -1,6 +1,6 @@
 # Harakat on the word meanings: where it stands
 
-Paused by Bilal on 11 Nov 2026 ("pause all the chats that do the harakating"); Fable's weekly bar was at 100%.
+Paused by Bilal on 11 Nov 2026 ("pause all the chats that do the harakating"). The same night he decided: what is vowelled stays kept, and nothing new gets vowelled ("what was done of voweling and pause should not be lost but from now on we'll just add the books without the harakats"). So this job stays paused: do not start helpers on "go"; resume only when he asks to vowel the rest. Branch `meaning-harakat` is pushed to origin as the safe copy; it is not merged, and the app still shows the meanings as before.
 
 - Done: 310 of 364 chunks in `harakat/meaning/out/`, all pass `python3 tools/meaning_harakat.py check`. Left: 310, 311, 313-364 (a chunk without an out file is still to do).
 - Helpers: one Agent per 3 chunks, `model: "fable"`, `effort: "high"`, `subagent_type: "general-purpose"`, prompt: "Read /home/bilal/dev/app-surah-re-harakat/docs/notes/meaning-harakat-helper.md completely and do exactly what it says. Your three chunks: A, B, C." About 5 minutes and 85k tokens each. 17 at once hit the Fable limit; 8-10 at once ran fine. Commit out files + unsure.md as they finish.
