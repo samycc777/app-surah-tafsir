@@ -79,7 +79,9 @@ const ayahJson = JSON.stringify(vs).replace(/</g, '\\u003c');
         <button class="iconbtn" data-close type="button" aria-label="إغلاق"><Icon name="close" size={17} /></button>
       </header>
       <div class="tp-tabs" id="taf-tabs">
-        <button type="button" data-mode="taf" aria-pressed="true">التفسير</button>
+        <button type="button" data-mode="taf" data-kind="saadi" aria-pressed="true">السعدي</button>
+        <button type="button" data-mode="taf" data-kind="muyassar" aria-pressed="false">الميسر</button>
+        <button type="button" data-mode="taf" data-kind="mukhtasar" aria-pressed="false">المختصر</button>
         <button type="button" data-mode="meaning" aria-pressed="false">المعنى</button>
         <button type="button" data-mode="irab" aria-pressed="false">الإعراب</button>
         <button type="button" data-mode="sarf" aria-pressed="false">التصريف</button>

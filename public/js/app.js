@@ -73,6 +73,7 @@
     kindBtns.forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.kind === k)));
   };
   syncKind();
+  window.addEventListener('tafsir', syncKind); // also picked from the pop-up's tabs
   kindBtns.forEach((b) => b.addEventListener('click', () => {
     store.set('tafsir', b.dataset.kind);
     syncKind();
@@ -275,7 +276,7 @@
       if (!tabsEl) return;
       const shown = wordMode() ? mode : 'taf';
       $$('button', tabsEl).forEach((b) => {
-        b.setAttribute('aria-pressed', String(b.dataset.mode === shown));
+        b.setAttribute('aria-pressed', String(b.dataset.mode === shown && (!b.dataset.kind || b.dataset.kind === kind)));
         b.disabled = b.dataset.mode !== 'taf' && !curW; // no word tapped (ayah number, link)
       });
     };
@@ -620,6 +621,12 @@
       if (!b || b.disabled) return;
       mode = b.dataset.mode;
       store.set('pop', mode);
+      // a tafsir tab picks that tafsir, like the settings sheet (which listens for 'tafsir')
+      if (b.dataset.kind && b.dataset.kind !== kind) {
+        store.set('tafsir', b.dataset.kind);
+        window.dispatchEvent(new CustomEvent('tafsir', { detail: b.dataset.kind }));
+        return;
+      }
       renderTaf(cur);
     });
     window.addEventListener('tafsir', (e) => { kind = e.detail; if (!sheet.hidden) renderTaf(cur); });
