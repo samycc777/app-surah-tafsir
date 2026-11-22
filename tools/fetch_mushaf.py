@@ -15,6 +15,10 @@ RAW = ROOT / 'work' / 'api'
 PAGES = ROOT / 'public' / 'mushaf' / 'pages'
 API = 'https://api.quran.com/api/v4/verses/by_page/{p}?words=true&word_fields=text_uthmani,code_v2,line_number,page_number&per_page=50'
 UA = 'Mozilla/5.0 (compatible; surah-tafsir-build/1.0)'
+# first page of each juz in the Madinah print (the API's juz_number follows the verse,
+# so a page opening a verse or two before the juz mark showed the previous juz)
+JUZ_PAGES = [1, 22, 42, 62, 82, 102, 121, 142, 162, 182, 201, 222, 242, 262, 282,
+             302, 322, 342, 362, 382, 402, 422, 442, 462, 482, 502, 522, 542, 562, 582]
 NAMES = [m['name'] for m in json.load(open(ROOT / 'src/data/meta.json'))]
 
 def fetch(p):
@@ -65,8 +69,15 @@ def main():
             fp = int(first_word.get('page_number') or p)
             if a == 1:
                 page_starts[fp].append({'n': s, 'name': NAMES[s-1], 'line': int(first_word['line_number']), 'a': a})
+            last = None
             for w in words:
                 wp = int(w.get('page_number') or p)
+                # the API once files a verse-end number a line too early (84:21's ۝ on
+                # 589 line 13, mid-verse): an end marker stays on its verse's last line.
+                if (w.get('char_type_name') == 'end' and last and
+                        (wp, int(w['line_number'])) < last):
+                    wp, w = last[0], {**w, 'line_number': last[1]}
+                last = (wp, int(w['line_number']))
                 if not page_verses[wp] or page_verses[wp][-1] is not v:
                     page_verses[wp].append(v)
                 kind = w.get('char_type_name') or 'word'
@@ -101,6 +112,18 @@ def main():
                 lines[slots[0]] = {'line': lines[slots[0]]['line'], **band}
                 if need == 2:
                     lines[slots[1]] = {'line': lines[slots[1]]['line'], **bas}
+            elif idx == len(free) and p > 1 and need - len(free) <= trailing_blanks(pages[p - 1]):
+                # the surah opens this page with too few lines above it: the print
+                # puts its band (and basmala, if still short) on the last lines of
+                # the previous page, e.g. an-Nisa's band ends page 76.
+                items = [band] + ([bas] if need == 2 else [])
+                carry, here = items[:need - len(free)], items[need - len(free):]
+                prev = pages[p - 1]['rows']
+                for k, it in enumerate(carry):
+                    prev[len(prev) - len(carry) + k] = it
+                (PAGES / f'{p - 1}.json').write_text(json.dumps(pages[p - 1], ensure_ascii=False, separators=(',', ':')))
+                for slot, it in zip(sorted(free), here):
+                    lines[slot] = {'line': lines[slot]['line'], **it}
             else:
                 # insert before the surah's first row and shift everything below
                 ins = idx
@@ -114,7 +137,7 @@ def main():
             out_rows.append({'blank': 1})
         meta = {
             'p': p,
-            'juz': first_verse.get('juz_number'),
+            'juz': max(j for j, first in enumerate(JUZ_PAGES, 1) if first <= p),  # the print's header: every juz starts a page
             'hizb': first_verse.get('hizb_number'),
             'rub': first_verse.get('rub_el_hizb_number'),
             's': {'n': int(first_verse['verse_key'].split(':')[0]), 'a': int(first_verse['verse_key'].split(':')[1]), 'name': NAMES[int(first_verse['verse_key'].split(':')[0])-1]},
@@ -136,6 +159,14 @@ def main():
     (ROOT / 'src/data/mushaf-ayahs.json').write_text(json.dumps(ayah_page, ensure_ascii=False, separators=(',', ':')))
     (ROOT / 'src/data/mushaf-surahs.json').write_text(json.dumps(ranges, ensure_ascii=False, separators=(',', ':')))
     print('pages', len(pages), 'surahs', len(ranges), 'bytes', sum((PAGES / f'{p}.json').stat().st_size for p in pages))
+
+def trailing_blanks(meta):
+    n = 0
+    for r in reversed(meta['rows']):
+        if not r.get('blank'):
+            break
+        n += 1
+    return n
 
 def ayahs(s):
     # count from meta.json
