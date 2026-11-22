@@ -46,31 +46,39 @@ def main():
     pages = {}
     ayah_page = {}
     surah_pages = {}
+    # The API's by_page lists sometimes hold a verse whose words sit on the
+    # neighbouring page (e.g. 55:17-18 listed on 532 but printed on 531's last
+    # lines). Place every word by its own page_number, never by the list it came in.
+    page_rows = {p: {} for p in range(1, 605)}
+    page_starts = {p: [] for p in range(1, 605)}
+    page_verses = {p: [] for p in range(1, 605)}
+    seen = set()
     for p in range(1, 605):
         d = json.loads((RAW / f'{p}.json').read_text())
-        verses = d['verses']
-        # rows keyed by API line number; words are appended in verse then position order
-        rows = {}
-        starts = []
-        prev_surah = None
-        first_verse, last_verse = verses[0], verses[-1]
-        for v in verses:
+        for v in d['verses']:
             s, a = map(int, v['verse_key'].split(':'))
-            if s != prev_surah and a == 1:
-                first_word = next(w for w in v['words'] if w.get('line_number'))
-                starts.append({'n': s, 'name': NAMES[s-1], 'line': int(first_word['line_number']), 'a': a})
-            prev_surah = s
-            for w in v['words']:
-                line = w.get('line_number')
-                if not line:
-                    continue
+            if v['verse_key'] in seen:
+                continue
+            seen.add(v['verse_key'])
+            words = [w for w in v['words'] if w.get('line_number')]
+            first_word = words[0]
+            fp = int(first_word.get('page_number') or p)
+            if a == 1:
+                page_starts[fp].append({'n': s, 'name': NAMES[s-1], 'line': int(first_word['line_number']), 'a': a})
+            for w in words:
+                wp = int(w.get('page_number') or p)
+                if not page_verses[wp] or page_verses[wp][-1] is not v:
+                    page_verses[wp].append(v)
                 kind = w.get('char_type_name') or 'word'
                 txt = w.get('text_uthmani') or w.get('text') or ''
-                rows.setdefault(int(line), []).append({
+                page_rows[wp].setdefault(int(w['line_number']), []).append({
                     't': txt, 'v': v['verse_key'], 'k': kind,
                     'g': w.get('code_v2') or '',  # glyphs of the King Fahd page font public/qcf/p<page>.woff2
                 })
-            ayah_page.setdefault(s, {}).setdefault(a, p)
+            ayah_page.setdefault(s, {}).setdefault(a, fp)
+    for p in range(1, 605):
+        rows, starts = page_rows[p], page_starts[p]
+        first_verse, last_verse = page_verses[p][0], page_verses[p][-1]
         # rows: words per line, 1..15
         lines = [{'line': i, 'words': rows.get(i, [])} for i in range(1, 16)]
         # insert surah banners / basmalas
